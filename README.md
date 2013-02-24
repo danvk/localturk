@@ -19,7 +19,7 @@ Run:
     git clone https://github.com/danvk/localturk.git
     cd localturk/sample
     python -m SimpleHTTPServer  # serve up static content
-    node ../server.js transcribe.html tasks.csv outputs.csv
+    node ../localturk.js transcribe.html tasks.csv outputs.csv
 
 Then visit http://localhost:4321/ to start Turking.
 
@@ -48,7 +48,7 @@ Then you'd make an HTML template for the task:
 
 Finally, you'd start up the Local Turk server:
 
-    $ node server.js path/to/template.html path/to/tasks.csv path/to/output.csv
+    $ node localturk.js path/to/template.html path/to/tasks.csv path/to/output.csv
 
 Now you can visit http://localhost:4321/ to complete each task. When you're done, the output.csv file will contain
 

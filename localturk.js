@@ -1,7 +1,7 @@
 // "Local Turk" server for running Mechanical Turk-like tasks locally.
 //
 // Usage:
-// node server.js template.html tasks.csv outputs.csv
+// node localturk.js template.html tasks.csv outputs.csv
 
 var assert = require('assert'),
     csv = require('csv'),
