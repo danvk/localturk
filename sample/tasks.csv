@@ -1,7 +1,7 @@
 image1,image2
-http://localhost:8000/images/0.png,http://localhost:8000/images/1.png
-http://localhost:8000/images/2.png,http://localhost:8000/images/3.png
-http://localhost:8000/images/4.png,http://localhost:8000/images/5.png
-http://localhost:8000/images/6.png,http://localhost:8000/images/7.png
-http://localhost:8000/images/8.png,http://localhost:8000/images/9.png
-http://localhost:8000/images/10.png,http://localhost:8000/images/11.png
+images/0.png,images/1.png
+images/2.png,images/3.png
+images/4.png,images/5.png
+images/6.png,images/7.png
+images/8.png,images/9.png
+images/10.png,images/11.png

@@ -1,3 +1,5 @@
+#!/usr/bin/env node
+
 // "Local Turk" server for running Mechanical Turk-like tasks locally.
 //
 // Usage:
@@ -6,19 +8,30 @@
 var assert = require('assert'),
     csv = require('csv'),
     fs = require('fs'),
-    http = require('http');
-    express = require('express');
+    http = require('http'),
+    express = require('express'),
+    path = require('path'),
+    program = require('commander')
     ;
 
-var args = process.argv;
-if (5 != args.length) {
-  console.log('Usage: ' + args[0] + ' ' + args[1] + ' (template file) (tasks file) (outputs_file)');
-  process.exit(1);
+program
+  .version('0.9')
+  .usage('[options] template.html tasks.csv outputs.csv')
+  .option('-s, --static_dir <dir>', 'Serve static content from this directory')
+  .option('-p, --port <n>', 'Run on this port (default 4321)', parseInt)
+  .parse(process.argv);
+
+var args = program.args;
+if (3 != args.length) {
+  program.help();
 }
 
-var template_file = args[2],
-    tasks_file = args[3],
-    outputs_file = args[4];
+var template_file = args[0],
+    tasks_file = args[1],
+    outputs_file = args[2];
+
+var port = program.port || 4321,
+    static_dir = program.static_dir || null;
 
 // Task is a dictionary. completed_tasks is a list of dictionaries,
 // each containing a superset of the keys in the input task.  Returns true if
@@ -211,13 +224,15 @@ app.configure(function() {
       dumpExceptions:true, 
       showStack:true
   }));
-  app.use(express.static(__dirname + '/static'));
+  if (static_dir) {
+    app.use(express.static(path.resolve(static_dir)));
+  }
 });
 
 app.get("/", function(req, res) {
   getNextTask(function(task, finished_tasks, num_tasks) {
     renderTemplate(template_file, task, function(e, data) {
-      var out = "<html><body><form action=/submit method=post>\n";
+      var out = "<!doctype html><html><body><form action=/submit method=post>\n";
       out += '<p>' + finished_tasks + ' / ' + num_tasks + '</p>\n';
       for (var k in task) {
         out += "<input type=hidden name='" + k + "' value=\"" + htmlEntities(task[k] || '') + "\" />";
@@ -245,5 +260,5 @@ app.post("/submit", function(req, res) {
   });
 });
 
-app.listen(4321);
-console.log('Running local turk on http://localhost:4321/')
+app.listen(port);
+console.log('Running local turk on http://localhost:' + port)

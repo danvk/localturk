@@ -16,10 +16,10 @@ Quick Start
 
 Run:
 
+    npm install express commander csv
     git clone https://github.com/danvk/localturk.git
     cd localturk/sample
-    python -m SimpleHTTPServer  # serve up static content
-    node ../localturk.js transcribe.html tasks.csv outputs.csv
+    ../localturk.js --static_dir . transcribe.html tasks.csv outputs.csv
 
 Then visit http://localhost:4321/ to start Turking.
 
