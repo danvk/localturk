@@ -59,16 +59,18 @@ function getNextTask(task_cb, done_cb) {
   var completed_tasks = [];
   var cb_fired = false;
   csv()
-    .fromPath(outputs_file, { columns: true })
-    .on('data', function(data, index) {
-      completed_tasks.push(data);
+    .from.path(outputs_file, { columns: true })
+    .on('record', function(data, index) {
+      if (index >= 0) {
+        completed_tasks.push(data);
+      }
     })
     .on('end', function(finished_count) {
       var task = null;
       // Now read the inputs until we find one which hasn't been completed.
       csv()
-        .fromPath(tasks_file, { columns: true })
-        .on('data', function(data, index) {
+        .from.path(tasks_file, { columns: true })
+        .on('record', function(data, index) {
           // TODO(danvk): bail out here.
           if (task) return;
 
@@ -170,8 +172,8 @@ function writeCompletedTask(task, completed_tasks_file, ready_cb) {
   }
 
   csv()
-    .fromPath(completed_tasks_file, { columns: true })
-    .on('data', function(data, index) {
+    .from.path(completed_tasks_file, { columns: true })
+    .on('record', function(data, index) {
       for (var k in data) {
         old_headers[k] = 1;
       }
