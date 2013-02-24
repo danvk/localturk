@@ -15,10 +15,11 @@ Quick Start
 -----------
 
 Run:
-git clone https://github.com/danvk/localturk.git
-cd localturk/sample
-python -m SimpleHTTPServer  # serve up static content
-node ../server.js transcribe.html tasks.csv outputs.csv
+
+    git clone https://github.com/danvk/localturk.git
+    cd localturk/sample
+    python -m SimpleHTTPServer  # serve up static content
+    node ../server.js transcribe.html tasks.csv outputs.csv
 
 Then visit http://localhost:4321/ to start Turking.
 
@@ -28,7 +29,7 @@ Templates and Tasks
 
 Using Local Turk is just like using Amazon's Mechanical Turk. You create:
 
-1. An HTML template file with a <form>
+1. An HTML template file with a &lt;form&gt;
 2. A CSV file of tasks
 
 For example, say you wanted to record whether some images contained a red ball. You would make a CSV file containing the URLs for each image:
