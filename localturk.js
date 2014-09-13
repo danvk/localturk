@@ -13,7 +13,6 @@ var assert = require('assert'),
     express = require('express'),
     bodyParser = require('body-parser'),
     errorhandler = require('errorhandler'),
-    // methodOverride = require('method-override'),
     path = require('path'),
     program = require('commander')
     ;
@@ -241,7 +240,6 @@ if (!fs.existsSync(outputs_file)) {
 var app = express();
 app.use(bodyParser.urlencoded({extended: false}))
 app.set('views', __dirname);
-// app.use(methodOverride());
 app.set("view options", {layout: false});
 app.use(errorhandler({
     dumpExceptions:true,
