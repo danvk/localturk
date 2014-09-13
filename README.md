@@ -14,12 +14,14 @@ You could use it, for instance, to generate test and training data for a Machine
 Quick Start
 -----------
 
+Install:
+
+    npm install -g localturk
+
 Run:
 
-    npm install express commander csv
-    git clone https://github.com/danvk/localturk.git
     cd localturk/sample
-    ../localturk.js --static_dir . transcribe.html tasks.csv outputs.csv
+    localturk --static_dir . transcribe.html tasks.csv outputs.csv
 
 Then visit http://localhost:4321/ to start Turking.
 
@@ -55,4 +57,3 @@ Now you can visit http://localhost:4321/ to complete each task. When you're done
     image_url,has_button
     http://example.com/image_with_red_ball.png,yes
     http://example.com/image_without_red_ball.png,no
-
