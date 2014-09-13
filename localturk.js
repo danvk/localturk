@@ -7,15 +7,19 @@
 
 var assert = require('assert'),
     csv = require('csv'),
+    csvParse = require('csv-parse'),
     fs = require('fs'),
     http = require('http'),
     express = require('express'),
+    bodyParser = require('body-parser'),
+    errorhandler = require('errorhandler'),
+    // methodOverride = require('method-override'),
     path = require('path'),
     program = require('commander')
     ;
 
 program
-  .version('0.9')
+  .version('1.0.0')
   .usage('[options] template.html tasks.csv outputs.csv')
   .option('-s, --static_dir <dir>', 'Serve static content from this directory')
   .option('-p, --port <n>', 'Run on this port (default 4321)', parseInt)
@@ -58,34 +62,44 @@ function isTaskCompleted(task, completed_tasks) {
 function getNextTask(task_cb, done_cb) {
   var completed_tasks = [];
   var cb_fired = false;
-  csv()
-    .from.path(outputs_file, { columns: true })
-    .on('record', function(data, index) {
-      if (index >= 0) {
-        completed_tasks.push(data);
+  var parser = makeParser();
+  var finished_count = 0;
+  parser
+    .on('readable', function() {
+      var record;
+      while (record = parser.read()) {
+        // XXX old code skipped the first row
+        completed_tasks.push(record);
+        finished_count++;
       }
     })
-    .on('end', function(finished_count) {
+    .on('finish', function() {
       var task = null;
       // Now read the inputs until we find one which hasn't been completed.
-      csv()
-        .from.path(tasks_file, { columns: true })
-        .on('record', function(data, index) {
-          // TODO(danvk): bail out here.
-          if (task) return;
-
-          if (!isTaskCompleted(data, completed_tasks)) {
-            task = data;
+      var parser = makeParser();
+      var total_count = 0;
+      parser
+        .on('readable', function() {
+          var record;
+          while (record = parser.read()) {
+            total_count++;
+            if (!task && !isTaskCompleted(record, completed_tasks)) {
+              task = record;
+            }
           }
         })
-        .on('end', function(total_count) {
+        .on('finish', function() {
           if (task) {
             task_cb(task, finished_count, total_count);
           } else {
             done_cb();
           }
         });
+
+      fs.createReadStream(tasks_file).pipe(parser);
     });
+
+  fs.createReadStream(outputs_file).pipe(parser);
 }
 
 function htmlEntities(str) {
@@ -163,6 +177,10 @@ function renderTemplate(template_file, task, ready_cb) {
   });
 }
 
+function makeParser() {
+  return csvParse({columns: true, skip_empty_lines: true});
+}
+
 // Write a new completed task dictionary to the file.
 // TODO(danvk): preserve column ordering.
 function writeCompletedTask(task, completed_tasks_file, ready_cb) {
@@ -171,14 +189,17 @@ function writeCompletedTask(task, completed_tasks_file, ready_cb) {
     new_headers[k] = 1;
   }
 
-  csv()
-    .from.path(completed_tasks_file, { columns: true })
-    .on('record', function(data, index) {
-      for (var k in data) {
-        old_headers[k] = 1;
+  var parser = makeParser();
+  parser
+    .on('readable', function() {
+      var record;
+      while (record = parser.read()) {
+        for (var k in record) {
+          old_headers[k] = 1;
+        }
       }
     })
-    .on('end', function(count) {
+    .on('finish', function() {
       // Merge old & new headers.
       var num_old_headers = 0;
       for (var k in old_headers) {
@@ -208,6 +229,8 @@ function writeCompletedTask(task, completed_tasks_file, ready_cb) {
         ready_cb();
       });
     });
+
+  fs.createReadStream(completed_tasks_file).pipe(parser);
 }
 
 if (!fs.existsSync(outputs_file)) {
@@ -216,20 +239,17 @@ if (!fs.existsSync(outputs_file)) {
 
 // --- begin server ---
 var app = express();
-app.configure(function() {
-  app.use(express.bodyParser());
-  app.set('views', __dirname);
-  app.use(express.methodOverride());
-  app.use(app.router);
-  app.set("view options", {layout: false});
-  app.use(express.errorHandler({
-      dumpExceptions:true, 
-      showStack:true
-  }));
-  if (static_dir) {
-    app.use(express.static(path.resolve(static_dir)));
-  }
-});
+app.use(bodyParser.urlencoded({extended: false}))
+app.set('views', __dirname);
+// app.use(methodOverride());
+app.set("view options", {layout: false});
+app.use(errorhandler({
+    dumpExceptions:true,
+    showStack:true
+}));
+if (static_dir) {
+  app.use(express.static(path.resolve(static_dir)));
+}
 
 app.get("/", function(req, res) {
   getNextTask(function(task, finished_tasks, num_tasks) {

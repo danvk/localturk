@@ -1,0 +1,21 @@
+{
+  "name": "localturk",
+  "version": "1.0.0",
+  "main": "localturk",
+  "bin": {
+    "localturk": "localturk.js"
+  },
+  "repository" : {
+    "type" : "git",
+    "url" : "http://github.com/danvk/localturk.git"
+  },
+  "dependencies": {
+    "errorhandler": "~1.2",
+    "express": "~4",
+    "body-parser": "~1.8",
+    "commander": "~2.3",
+    "csv": "~0.4",
+    "csv-parse": "~0",
+    "method-override": "~2.2"
+  }
+}
