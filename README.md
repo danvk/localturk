@@ -50,10 +50,26 @@ Then you'd make an HTML template for the task:
 
 Finally, you'd start up the Local Turk server:
 
-    $ node localturk.js path/to/template.html path/to/tasks.csv path/to/output.csv
+    $ localturk path/to/template.html path/to/tasks.csv path/to/output.csv
 
 Now you can visit http://localhost:4321/ to complete each task. When you're done, the output.csv file will contain
 
     image_url,has_button
     http://example.com/image_with_red_ball.png,yes
     http://example.com/image_without_red_ball.png,no
+
+Image Classification
+--------------------
+
+The use case described above (classifying images) is an extremely common one.
+
+To expedite this, localturk provides a separate script for doing image
+classification. The example above could be written as:
+
+
+    classify-images --labels 'Has a red ball,Does not have a red ball' *.png
+
+This will bring up a web server with a UI for assigning one of those two labels
+to each image on your local file system. The results will go in `output.csv`.
+
+For more details, run `classify-images --help`.

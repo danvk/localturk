@@ -13,16 +13,17 @@ var assert = require('assert'),
     express = require('express'),
     bodyParser = require('body-parser'),
     errorhandler = require('errorhandler'),
-    // methodOverride = require('method-override'),
     path = require('path'),
-    program = require('commander')
+    program = require('commander'),
+    open = require('open')
     ;
 
 program
-  .version('1.0.0')
+  .version('1.1.0')
   .usage('[options] template.html tasks.csv outputs.csv')
   .option('-s, --static_dir <dir>', 'Serve static content from this directory')
   .option('-p, --port <n>', 'Run on this port (default 4321)', parseInt)
+  .option('-q, --quit_on_done', 'Quit when done with all tasks.')
   .parse(process.argv);
 
 var args = program.args;
@@ -241,7 +242,6 @@ if (!fs.existsSync(outputs_file)) {
 var app = express();
 app.use(bodyParser.urlencoded({extended: false}))
 app.set('views', __dirname);
-// app.use(methodOverride());
 app.set("view options", {layout: false});
 app.use(errorhandler({
     dumpExceptions:true,
@@ -267,6 +267,9 @@ app.get("/", function(req, res) {
     });
   }, function() {
     res.send('DONE');
+    if (program.quit_on_done) {
+      process.exit(0);
+    }
   });
 });
 
@@ -284,3 +287,4 @@ app.post("/submit", function(req, res) {
 
 app.listen(port);
 console.log('Running local turk on http://localhost:' + port)
+open('http://localhost:' + port + '/');
