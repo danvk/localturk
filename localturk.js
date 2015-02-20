@@ -19,7 +19,7 @@ var assert = require('assert'),
     ;
 
 program
-  .version('1.1.0')
+  .version('1.1.1')
   .usage('[options] template.html tasks.csv outputs.csv')
   .option('-s, --static_dir <dir>', 'Serve static content from this directory')
   .option('-p, --port <n>', 'Run on this port (default 4321)', parseInt)
