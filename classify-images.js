@@ -77,6 +77,6 @@ html += [
 fs.writeSync(templateInfo.fd, html);
 fs.closeSync(templateInfo.fd);
 
-var args = ['localturk.js', '-q', '--static_dir', '.', templateInfo.path, csvInfo.path, program.output];
+var args = ['localturk', '-q', '--static_dir', '.', templateInfo.path, csvInfo.path, program.output];
 console.log('Running ', args.join(' '));
 child_process.spawn(args[0], args.slice(1), {stdio: 'inherit'});
