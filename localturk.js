@@ -14,7 +14,8 @@ var assert = require('assert'),
     bodyParser = require('body-parser'),
     errorhandler = require('errorhandler'),
     path = require('path'),
-    program = require('commander')
+    program = require('commander'),
+    open = require('open')
     ;
 
 program
@@ -286,3 +287,4 @@ app.post("/submit", function(req, res) {
 
 app.listen(port);
 console.log('Running local turk on http://localhost:' + port)
+open('http://localhost:' + port + '/');

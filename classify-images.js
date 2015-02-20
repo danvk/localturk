@@ -13,10 +13,11 @@
  * labels.csv.
  */
 
-var fs = require('fs');
-var program = require('commander');
-var temp = require('temp').track();
-var child_process = require('child_process');
+var child_process = require('child_process'),
+    escape = require('escape-html'),
+    fs = require('fs'),
+    program = require('commander'),
+    temp = require('temp').track();
 
 function list(val) {
   return val.split(',');
@@ -51,15 +52,31 @@ var csvInfo = temp.openSync({suffix: '.csv'}),
 fs.writeSync(csvInfo.fd, 'path\n' + program.args.join('\n') + '\n');
 fs.closeSync(csvInfo.fd);
 
-var buttonsHtml = program.labels.map(function(label) {
-  return '<input type="submit" name="type" value="' + label + '">'
+var buttonsHtml = program.labels.map(function(label, idx) {
+  var buttonText = label + ' (' + (1 + idx) + ')';
+  return '<button type="submit" id=' + (1+idx) + ' name="label" value="' + label + '">' + escape(buttonText) + '</button>'
 }).join('&nbsp;');
 var widthHtml = program.max_width ? ' width="' + program.max_width + '"' : '';
 var html = buttonsHtml + '\n<p><img src="${path}" ' + widthHtml + '></p>';
 
+// Add keyboard shortcuts. 1=first button, etc.
+html += [
+  '<script>',
+  'window.addEventListener("keydown", function(e) {',
+  '  var code = e.keyCode;',
+  '  if (code < 48 || code > 57) return;',
+  '  var el = document.getElementById(String.fromCharCode(code));',
+  '  if (el) {',
+  '    e.preventDefault();',
+  '    el.click();',
+  '  }',
+  '});',
+  '</script>'
+].join('\n');
+
 fs.writeSync(templateInfo.fd, html);
 fs.closeSync(templateInfo.fd);
 
-var args = ['localturk', '-q', '--static_dir', '.', templateInfo.path, csvInfo.path, program.output];
+var args = ['localturk.js', '-q', '--static_dir', '.', templateInfo.path, csvInfo.path, program.output];
 console.log('Running ', args.join(' '));
 child_process.spawn(args[0], args.slice(1), {stdio: 'inherit'});

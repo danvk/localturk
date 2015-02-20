@@ -16,8 +16,10 @@
     "csv": "~0.4",
     "csv-parse": "~0",
     "errorhandler": "~1.2",
+    "escape-html": "^1.0.1",
     "express": "~4",
     "method-override": "~2.2",
+    "open": "0.0.5",
     "temp": "^0.8.1"
   }
 }
