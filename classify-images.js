@@ -24,7 +24,7 @@ function list(val) {
 }
 
 program
-  .version('1.1.0')
+  .version('1.1.2')
   .usage('[options] /path/to/images/*.jpg')
   .option('-o, --output <file>',
           'Path to output CSV file (default output.csv)', 'output.csv')
@@ -64,8 +64,11 @@ html += [
   '<script>',
   'window.addEventListener("keydown", function(e) {',
   '  var code = e.keyCode;',
-  '  if (code < 48 || code > 57) return;',
-  '  var el = document.getElementById(String.fromCharCode(code));',
+  '  var num = null;',
+  '  if (code >= 48 && code <= 57) num = code - 48;  // numbers above keyboard',
+  '  if (code >= 96 && code <= 105) num = code - 96;  // numpad',
+  '  if (num === null) return;',
+  '  var el = document.getElementById(num);',
   '  if (el) {',
   '    e.preventDefault();',
   '    el.click();',
