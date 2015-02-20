@@ -18,10 +18,11 @@ var assert = require('assert'),
     ;
 
 program
-  .version('1.0.0')
+  .version('1.1.0')
   .usage('[options] template.html tasks.csv outputs.csv')
   .option('-s, --static_dir <dir>', 'Serve static content from this directory')
   .option('-p, --port <n>', 'Run on this port (default 4321)', parseInt)
+  .option('-q, --quit_on_done', 'Quit when done with all tasks.')
   .parse(process.argv);
 
 var args = program.args;
@@ -265,6 +266,9 @@ app.get("/", function(req, res) {
     });
   }, function() {
     res.send('DONE');
+    if (program.quit_on_done) {
+      process.exit(0);
+    }
   });
 });
 
