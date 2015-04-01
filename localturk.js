@@ -46,7 +46,9 @@ function isTaskCompleted(task, completed_tasks) {
     var d = completed_tasks[i];
     var match = true;
     for (var k in task) {
-      if (!(k in d) || d[k] !== task[k]) {
+      var dnorm = d[k].replace(/\r\n/g, '\n').replace(/\r/g, '\n');
+      var tasknorm = task[k].replace(/\r/g, '\n');
+      if (!(k in d) || dnorm != tasknorm) {
         match = false;
         break;
       }
