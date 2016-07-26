@@ -57,13 +57,25 @@ var buttonsHtml = program.labels.map(function(label, idx) {
   return '<button type="submit" id=' + (1+idx) + ' name="label" value="' + label + '">' + escape(buttonText) + '</button>'
 }).join('&nbsp;');
 var widthHtml = program.max_width ? ' width="' + program.max_width + '"' : '';
-var html = buttonsHtml + '\n<p><img src="${path}" ' + widthHtml + '></p>';
+var undoHtml = [
+  '</form>',
+  '<form action="/delete-last" method="POST" style="display: inline-block">',
+  '  <input type="submit" id="undo-button" value="Undo Last (z)">',
+  '</form>'
+].join('\n');
+var html = buttonsHtml + undoHtml + '\n<p><img src="${path}" ' + widthHtml + '></p>';
 
 // Add keyboard shortcuts. 1=first button, etc.
 html += [
   '<script>',
   'window.addEventListener("keydown", function(e) {',
   '  var code = e.keyCode;',
+  '  if (code == 90) {',
+  '    var el = document.getElementById("undo-button");',
+  '    e.preventDefault();',
+  '    el.click();',
+  '    return;',
+  '  }',
   '  var num = null;',
   '  if (code >= 48 && code <= 57) num = code - 48;  // numbers above keyboard',
   '  if (code >= 96 && code <= 105) num = code - 96;  // numpad',
@@ -74,12 +86,16 @@ html += [
   '    el.click();',
   '  }',
   '});',
-  '</script>'
+  '</script>',
+  '<style>',
+  '  form { display: inline-block; }',
+  '  #undo-button { margin-left: 20px; }',
+  '</style>'
 ].join('\n');
 
 fs.writeSync(templateInfo.fd, html);
 fs.closeSync(templateInfo.fd);
 
-var args = ['localturk', '-q', '--static_dir', '.', templateInfo.path, csvInfo.path, program.output];
+var args = ['./localturk.js', '-q', '--static_dir', '.', templateInfo.path, csvInfo.path, program.output];
 console.log('Running ', args.join(' '));
 child_process.spawn(args[0], args.slice(1), {stdio: 'inherit'});

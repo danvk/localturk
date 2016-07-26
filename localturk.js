@@ -236,6 +236,43 @@ function writeCompletedTask(task, completed_tasks_file, ready_cb) {
   fs.createReadStream(completed_tasks_file).pipe(parser);
 }
 
+function deleteLastTask(completed_tasks_file, ready_cb) {
+  fs.readFile(completed_tasks_file, 'utf8', function(err, text) {
+    if (err) {
+      ready_cb(err);
+      return;
+    }
+
+    var lines = text.split('\n');
+    if (lines.length === 0) {
+      ready_cb({error: 'Cannot delete task from empty file'});
+      return;
+    }
+
+    // There may or may not be a trailing newline. Back out from the last
+    // line just to make sure we really delete something.
+    for (var i = lines.length - 1; i >= 0; i--) {
+      if (lines[i] !== '') break;
+    }
+
+    if (lines[i] === '') {
+      ready_cb({error: 'All lines in file were blank.'});
+      return;
+    }
+
+    console.log('Deleting ', lines[i]);
+    lines = lines.slice(0, i);
+    text = lines.join('\n') + '\n';
+    fs.writeFile(completed_tasks_file, text, 'utf8', function(err) {
+      if (err) {
+        ready_cb(err);
+      } else {
+        ready_cb();
+      }
+    });
+  });
+}
+
 if (!fs.existsSync(outputs_file)) {
   fs.writeFileSync(outputs_file, '');
 }
@@ -285,6 +322,16 @@ app.post("/submit", function(req, res) {
       res.redirect('/');
     }
   });
+});
+
+app.post("/delete-last", function(req, res) {
+  deleteLastTask(outputs_file, function(e) {
+    if (e) {
+      res.send('FAIL: ' + JSON.stringify(e));
+    } else {
+      res.redirect('/');
+    }
+  })
 });
 
 app.listen(port);
