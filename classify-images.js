@@ -24,7 +24,7 @@ function list(val) {
 }
 
 program
-  .version('1.1.3')
+  .version('1.2.1')
   .usage('[options] /path/to/images/*.jpg')
   .option('-o, --output <file>',
           'Path to output CSV file (default output.csv)', 'output.csv')
