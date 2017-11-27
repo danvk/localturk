@@ -2,6 +2,7 @@
   "name": "localturk",
   "version": "1.2.2",
   "main": "localturk",
+  "license": "MIT",
   "bin": {
     "localturk": "localturk.js",
     "classify-images": "classify-images.js"
