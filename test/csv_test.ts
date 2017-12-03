@@ -46,4 +46,34 @@ describe('csv', () => {
       ['2', 'John', 'Doer\nQuoter'],
     ]);
   });
+
+  it('should write a CSV file', async () => {
+    const rows = [
+      ['id', 'First', 'Last'],
+      ['1', 'Jane', 'Doe'],
+      ['2', 'Dan', 'VK']
+    ];
+    await csv.writeCsv('/tmp/test.csv', rows);
+    const data = await fs.readFile('/tmp/test.csv', {encoding: 'utf8'});
+    expect(data).to.equal(
+      'id,First,Last\n' +
+      '1,Jane,Doe\n' +
+      '2,Dan,VK\n'
+    );
+  });
+
+  it('should write a complex CSV file', async () => {
+    const rows = [
+      ['id', 'First,Last', 'Last,First'],
+      ['1', 'Jane,Doe', 'Doe,Jane'],
+      ['2', 'Dan,\nVK', 'VK,Dan']
+    ];
+    await csv.writeCsv('/tmp/test.csv', rows);
+    const data = await fs.readFile('/tmp/test.csv', {encoding: 'utf8'});
+    expect(data).to.equal(
+      'id,"First,Last","Last,First"\n' +
+      '1,"Jane,Doe","Doe,Jane"\n' +
+      '2,"Dan,\nVK","VK,Dan"\n'
+    );
+  });
 });

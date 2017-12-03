@@ -1,5 +1,6 @@
 import * as csvParse from 'csv-parse';
-import * as fs from 'fs';
+import * as csvStringify from 'csv-stringify';
+import * as fs from 'fs-extra';
 
 if (!(Symbol as any)['asyncIterator']) {
   (Symbol as any)['asyncIterator'] = Symbol();
@@ -8,13 +9,6 @@ if (!(Symbol as any)['asyncIterator']) {
 const csvOptions: csvParse.Options = {
   skip_empty_lines: true
 };
-
-/** Read just the headers from a CSV file. */
-export async function readHeaders(file: string) {
-  for await (const row of readRows(file)) {
-    return row;
-  }
-}
 
 interface Row {
   type: 'row';
@@ -82,11 +76,64 @@ export async function* readRows(file: string) {
   }
 }
 
+/** Read just the headers from a CSV file. */
+export async function readHeaders(file: string) {
+  for await (const row of readRows(file)) {
+    return row;
+  }
+}
+
+/** Write a CSV file */
+export async function writeCsv(file: string, rows: string[][]) {
+  // TODO(danvk): make this less memory-intensive
+  return new Promise((resolve, reject) => {
+    csvStringify(rows, (error, output) => {
+      if (error) {
+        reject(error);
+      } else {
+        fs.writeFileSync(file, output, {encoding: 'utf8'});
+        resolve();
+      }
+    });
+  });
+}
+
 /**
  * Append one row to a CSV file.
  *
  * If the row contains a new header, the entire file will be rewritten.
  */
 export async function appendRow(file: string, row: {[column: string]: string}) {
+  const exists = await fs.pathExists(file);
+  if (!exists) {
+    // Easy: write the whole file.
+  }
 
+  const lines = readRows(file);
+  const headerRow = await lines.next();
+  if (headerRow.done) {
+    throw new Error(`CSV file ${file} was empty`);
+  }
+  const headers = headerRow.value;
+  const headerToIndex: {[header: string]: number} = {};
+  headers.forEach((header, i) => {
+    headerToIndex[header] = i;
+  })
+
+  // Check if there are any new headers in the row.
+  let needsRewrite = false;
+  for (const k in row) {
+    if (!(k in headerToIndex)) {
+      needsRewrite = true;
+      break;
+    }
+  }
+
+  if (needsRewrite) {
+    // ...
+  } else {
+    // write the new row
+    const newRow = headers.map(k => row[k] || '');
+
+  }
 }
