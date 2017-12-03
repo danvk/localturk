@@ -86,13 +86,17 @@ export async function readHeaders(file: string) {
 /** Write a CSV file */
 export async function writeCsv(file: string, rows: string[][]) {
   // TODO(danvk): make this less memory-intensive
-  return new Promise((resolve, reject) => {
+  const output = await stringify(rows);
+  await fs.writeFile(file, output, {encoding: 'utf8'});
+}
+
+async function stringify(rows: string[][]): Promise<string> {
+  return new Promise<string>((resolve, reject) => {
     csvStringify(rows, (error, output) => {
       if (error) {
         reject(error);
       } else {
-        fs.writeFileSync(file, output, {encoding: 'utf8'});
-        resolve();
+        resolve(output);
       }
     });
   });
@@ -107,6 +111,9 @@ export async function appendRow(file: string, row: {[column: string]: string}) {
   const exists = await fs.pathExists(file);
   if (!exists) {
     // Easy: write the whole file.
+    const header = Object.keys(row);
+    const rows = [header, header.map(k => row[k])]
+    return writeCsv(file, rows);
   }
 
   const lines = readRows(file);
@@ -121,19 +128,26 @@ export async function appendRow(file: string, row: {[column: string]: string}) {
   })
 
   // Check if there are any new headers in the row.
-  let needsRewrite = false;
+  const newHeaders = [];
   for (const k in row) {
     if (!(k in headerToIndex)) {
-      needsRewrite = true;
-      break;
+      newHeaders.push(k);
     }
   }
 
-  if (needsRewrite) {
-    // ...
+  if (newHeaders.length) {
+    const fullHeaders = headers.concat(newHeaders);
+    const rows = [fullHeaders];
+    const emptyCols = newHeaders.map(() => '');
+    for await (const row of lines) {
+      rows.push(row.concat(emptyCols));
+    }
+    rows.push(fullHeaders.map(k => row[k] || ''));
+    await writeCsv(file, rows);
   } else {
     // write the new row
     const newRow = headers.map(k => row[k] || '');
-
+    await lines.return();  // close the file for reading.
+    await fs.appendFile(file, await stringify([newRow]));
   }
 }

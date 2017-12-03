@@ -47,6 +47,13 @@ describe('csv', () => {
     ]);
   });
 
+  const read = (file: string) => fs.readFile(file, {encoding: 'utf8'});
+  const ensureDeleted = async (file: string) => {
+    try {
+      await fs.unlink(file);
+    } catch (e) {}
+  };
+
   it('should write a CSV file', async () => {
     const rows = [
       ['id', 'First', 'Last'],
@@ -54,7 +61,7 @@ describe('csv', () => {
       ['2', 'Dan', 'VK']
     ];
     await csv.writeCsv('/tmp/test.csv', rows);
-    const data = await fs.readFile('/tmp/test.csv', {encoding: 'utf8'});
+    const data = await read('/tmp/test.csv');
     expect(data).to.equal(
       'id,First,Last\n' +
       '1,Jane,Doe\n' +
@@ -69,11 +76,32 @@ describe('csv', () => {
       ['2', 'Dan,\nVK', 'VK,Dan']
     ];
     await csv.writeCsv('/tmp/test.csv', rows);
-    const data = await fs.readFile('/tmp/test.csv', {encoding: 'utf8'});
+    const data = await read('/tmp/test.csv');
     expect(data).to.equal(
       'id,"First,Last","Last,First"\n' +
       '1,"Jane,Doe","Doe,Jane"\n' +
       '2,"Dan,\nVK","VK,Dan"\n'
     );
+  });
+
+  it('should write a fresh CSV file', async () => {
+    await ensureDeleted('/tmp/test.csv');
+    await csv.appendRow('/tmp/test.csv', {a: '1', b: '2'});
+    expect(await read('/tmp/test.csv')).to.equal('a,b\n1,2\n');
+  });
+
+  it('should append to a CSV file', async () => {
+    await ensureDeleted('/tmp/test.csv');
+    await csv.appendRow('/tmp/test.csv', {a: '1', b: '2'});
+    await csv.appendRow('/tmp/test.csv', {b: '1', a: '2'});
+    expect(await read('/tmp/test.csv')).to.equal('a,b\n1,2\n2,1\n');
+  });
+
+  it('should append a column to a CSV file', async () => {
+    await ensureDeleted('/tmp/test.csv');
+    await csv.appendRow('/tmp/test.csv', {a: '1', b: '2'});
+    await csv.appendRow('/tmp/test.csv', {b: '1', a: '2'});
+    await csv.appendRow('/tmp/test.csv', {b: '3', c: '4'});
+    expect(await read('/tmp/test.csv')).to.equal('a,b,c\n1,2,\n2,1,\n,3,4\n');
   });
 });
