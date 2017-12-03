@@ -1,0 +1,26 @@
+{
+  "name": "localturk",
+  "version": "1.2.2",
+  "main": "localturk",
+  "license": "MIT",
+  "bin": {
+    "localturk": "localturk.js",
+    "classify-images": "classify-images.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "http://github.com/danvk/localturk.git"
+  },
+  "dependencies": {
+    "body-parser": "~1.8",
+    "commander": "~2.3",
+    "csv": "~0.4",
+    "csv-parse": "~0",
+    "errorhandler": "~1.2",
+    "escape-html": "^1.0.1",
+    "express": "~4",
+    "method-override": "~2.2",
+    "open": "0.0.5",
+    "temp": "^0.8.1"
+  }
+}
