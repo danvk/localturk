@@ -11,17 +11,9 @@ const csvOptions: csvParse.Options = {
 
 /** Read just the headers from a CSV file. */
 export async function readHeaders(file: string) {
-  const parser = csvParse(csvOptions);
-  const stream = fs.createReadStream(file, 'utf8');
-  return new Promise((resolve, reject) => {
-    parser.on('data', (row: string[]) => {
-      resolve(row);
-      parser.pause();
-      stream.destroy();
-    });
-    parser.on('error', reject);
-    stream.pipe(parser);
-  });
+  for await (const row of readRows(file)) {
+    return row;
+  }
 }
 
 interface Row {
