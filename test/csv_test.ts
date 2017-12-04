@@ -104,4 +104,19 @@ describe('csv', () => {
     await csv.appendRow('/tmp/test.csv', {b: '3', c: '4'});
     expect(await read('/tmp/test.csv')).to.equal('a,b,c\n1,2,\n2,1,\n,3,4\n');
   });
+
+  it('should remove a row from a complex CSV file', async () => {
+    const rows = [
+      ['id', 'First,Last', 'Last,First'],
+      ['1', 'Jane,Doe', 'Doe,Jane'],
+      ['2', 'Dan,\nVK', 'VK,Dan']
+    ];
+    await csv.writeCsv('/tmp/test.csv', rows);
+    await csv.deleteLastRow('/tmp/test.csv');
+    const data = await read('/tmp/test.csv');
+    expect(data).to.equal(
+      'id,"First,Last","Last,First"\n' +
+      '1,"Jane,Doe","Doe,Jane"\n'
+    );
+  });
 });

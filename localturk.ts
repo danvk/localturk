@@ -12,7 +12,10 @@ import * as express from 'express';
 import * as fs from 'fs-extra';
 import * as path from 'path';
 import * as program from 'commander';
-import * as open from 'open';
+import open = require('open');
+
+import * as csv from './csv';
+import * as utils from './utils';
 
 program
   .version('2.0.0')
@@ -28,3 +31,17 @@ if (3 !== args.length) {
 
 const [templateFile, tasksFile, outputsFile] = args;
 const port = program.port || 4321;
+
+type Task = {[key: string]: string};
+
+async function renderTemplate(templateFile: string, task: Task) {
+  let template = await fs.readFile(templateFile, {encoding: 'utf8'});
+  const fullDict = {};
+  for (const k in task) {
+    fullDict[k] = utils.htmlEntities(task[k]);
+  }
+  fullDict['ALL_JSON'] = utils.htmlEntities(JSON.stringify(task, null, 2));
+  fullDict['ALL_JSON_RAW'] = JSON.stringify(task);
+  return utils.renderTemplate(template, fullDict);
+}
+

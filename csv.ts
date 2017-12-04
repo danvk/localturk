@@ -151,3 +151,11 @@ export async function appendRow(file: string, row: {[column: string]: string}) {
     await fs.appendFile(file, await stringify([newRow]));
   }
 }
+
+export async function deleteLastRow(file: string) {
+  const rows = [];
+  for await (const row of readRows(file)) {
+    rows.push(row);
+  }
+  await writeCsv(file, rows.slice(0, -1));
+}
