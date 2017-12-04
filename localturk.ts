@@ -39,7 +39,7 @@ const port = program.port || 4321;
 type Task = {[key: string]: string};
 
 async function renderTemplate(task: Task) {
-  let template = await fs.readFile(templateFile, {encoding: 'utf8'});
+  const template = await fs.readFile(templateFile, {encoding: 'utf8'});
   const fullDict = {};
   for (const k in task) {
     fullDict[k] = utils.htmlEntities(task[k]);
@@ -103,6 +103,10 @@ if (program['write-template']) {
   process.exit(0);
 }
 
+if (!fs.pathExistsSync(outputsFile)) {
+  fs.writeFileSync(outputsFile, '');
+}
+
 const app = express();
 app.use(bodyParser.urlencoded({extended: false}));
 app.use(errorhandler());
@@ -110,6 +114,7 @@ app.use(express.static(path.resolve(path.dirname(templateFile))));
 
 app.get('/', utils.wrapPromise(async (req, res) => {
   const {task, numCompleted, numTotal} = await getNextTask();
+  console.log(task);
   if (task) {
     const templateHtml = await renderTemplate(task);
     const sourceInputs = _.map(task, (v, k) =>
@@ -119,7 +124,7 @@ app.get('/', utils.wrapPromise(async (req, res) => {
     <html>
     <title>${numCompleted} / ${numTotal} - localturk</title>
     <body><form action=/submit method=post>
-    <p>${numCompleted} finished/ ${numTotal} </p>
+    <p>${numCompleted} / ${numTotal} </p>
     ${sourceInputs}
     ${templateHtml}
     <hr/><input type=submit />
@@ -127,6 +132,7 @@ app.get('/', utils.wrapPromise(async (req, res) => {
     </body>
     </html>
     `;
+    res.send(html);
   } else {
     res.send('DONE');
     process.exit(0);

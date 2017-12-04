@@ -10,7 +10,7 @@ export function htmlEntities(str: string) {
 
 /* Does ${k} --> v interpolation */
 export function renderTemplate(template: string, data: {[key: string]: string}) {
-  return template.replace(/\$\{([^}]*)\}/, (substr, key) => {
+  return template.replace(/\$\{([^}]*)\}/g, (substr, key) => {
     return data[key];
   });
 }
