@@ -167,11 +167,19 @@ export async function* readRowObjects(file: string) {
     if (!header) {
       header = row;
     } else {
-      const rowObj = {};
+      const rowObj: {[column: string]: string} = {};
       row.forEach((col, i) => {
         rowObj[header[i]] = col;
       });
       yield rowObj;
     }
   }
+}
+
+export async function readAllRowObjects(file: string) {
+  const objs: {[column: string]: string}[] = [];
+  for await (const obj of readRowObjects(file)) {
+    objs.push(obj);
+  }
+  return objs;
 }

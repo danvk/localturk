@@ -51,26 +51,13 @@ async function renderTemplate(task: Task) {
 
 async function readCompletedTasks(): Promise<Task[]> {
   if (!fs.pathExistsSync(outputsFile)) return [];
-  const tasks = [];
-  for await (const task of csv.readRowObjects(outputsFile)) {
-    tasks.push(task);
-  }
-  return tasks;
+  return csv.readAllRowObjects(outputsFile);
 }
 
 function isTaskCompleted(task, completedTasks) {
+  const normTask = utils.normalizeValues(task);
   for (const d of completedTasks) {
-    var match = true;
-    for (var k in task) {
-      var dNorm = d[k].replace(/\r\n/g, '\n').replace(/\r/g, '\n');
-      var taskNorm = task[k].replace(/\r/g, '\n');
-      if (!(k in d) || dNorm != taskNorm) {
-        match = false;
-        break;
-      }
-    }
-
-    if (match) return true;
+    if (utils.isSupersetOf(d, normTask)) return true;
   }
   return false;
 }
@@ -82,12 +69,12 @@ interface TaskStats {
 }
 
 async function getNextTask(): Promise<TaskStats> {
-  const completedTasks = await readCompletedTasks();
+  const completedTasks = (await readCompletedTasks()).map(utils.normalizeValues);
   let nextTask: Task;
   let numTotal = 0;
   for await (const task of csv.readRowObjects(tasksFile)) {
     numTotal++;
-    if (!nextTask && !isTaskCompleted(task, completedTasks)) {
+    if (!nextTask && !isTaskCompleted(utils.normalizeValues(task), completedTasks)) {
       nextTask = task;
     }
   }
