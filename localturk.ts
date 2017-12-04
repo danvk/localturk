@@ -50,6 +50,7 @@ async function renderTemplate(task: Task) {
 }
 
 async function readCompletedTasks(): Promise<Task[]> {
+  if (!fs.pathExistsSync(outputsFile)) return [];
   const tasks = [];
   for await (const task of csv.readRowObjects(outputsFile)) {
     tasks.push(task);
@@ -101,10 +102,6 @@ async function getNextTask(): Promise<TaskStats> {
 if (program['write-template']) {
   // TODO(danvk): implement.
   process.exit(0);
-}
-
-if (!fs.pathExistsSync(outputsFile)) {
-  fs.writeFileSync(outputsFile, '');
 }
 
 const app = express();
