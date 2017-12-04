@@ -159,3 +159,18 @@ export async function deleteLastRow(file: string) {
   }
   await writeCsv(file, rows.slice(0, -1));
 }
+
+export async function* readRowObjects(file: string) {
+  let header;
+  for await (const row of readRows(file)) {
+    if (!header) {
+      header = row;
+    } else {
+      const rowObj = {};
+      row.forEach((col, i) => {
+        rowObj[header[i]] = col;
+      });
+      yield rowObj;
+    }
+  }
+}
