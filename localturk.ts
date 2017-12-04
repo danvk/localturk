@@ -37,6 +37,7 @@ const [templateFile, tasksFile, outputsFile] = args;
 const port = program.port || 4321;
 
 type Task = {[key: string]: string};
+let flash = '';  // this is used to show warnings in the web UI.
 
 async function renderTemplate({task, numCompleted, numTotal}: TaskStats) {
   const template = await fs.readFile(templateFile, {encoding: 'utf8'});
@@ -48,6 +49,9 @@ async function renderTemplate({task, numCompleted, numTotal}: TaskStats) {
   fullDict['ALL_JSON_RAW'] = JSON.stringify(task);
   const userHtml = utils.renderTemplate(template, fullDict);
 
+  const thisFlash = flash;
+  flash = '';
+
   const sourceInputs = _.map(task, (v, k) =>
       `<input type=hidden name="${k}" value="${utils.htmlEntities(v)}">`
     ).join('\n');
@@ -57,7 +61,7 @@ async function renderTemplate({task, numCompleted, numTotal}: TaskStats) {
 <html>
 <title>${numCompleted} / ${numTotal} - localturk</title>
 <body><form action=/submit method=post>
-<p>${numCompleted} / ${numTotal} </p>
+<p>${numCompleted} / ${numTotal} <span style="background: yellow">${thisFlash}</span></p>
 ${sourceInputs}
 ${userHtml}
 <hr/><input type=submit />
@@ -78,6 +82,17 @@ function isTaskCompleted(task, completedTasks) {
     if (utils.isSupersetOf(d, normTask)) return true;
   }
   return false;
+}
+
+async function checkTaskOutput(task: Task) {
+  // Check whether the output has any keys that aren't in the input.
+  // This is a common mistake that can happen if you forget to set a name on
+  // your form elements.
+  const headers = await csv.readHeaders(tasksFile);
+  for (const k in task) {
+    if (headers.indexOf(k) === -1) return;  // there's a new key.
+  }
+  flash = 'No new keys in output. Make sure your &lt;input&gt; elements have "name" attributes';
 }
 
 interface TaskStats {
@@ -129,7 +144,7 @@ app.get('/', utils.wrapPromise(async (req, res) => {
 app.post('/submit', utils.wrapPromise(async (req, res) => {
   const task: Task = req.body;
   await csv.appendRow(outputsFile, task);
-  // TODO(danvk): check that task contains non-input keys.
+  checkTaskOutput(task);  // sets the "flash" variable with any errors.
   console.log('Saved ' + JSON.stringify(task));
   res.redirect('/');
 }));
