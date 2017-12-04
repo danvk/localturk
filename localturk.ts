@@ -38,7 +38,7 @@ const port = program.port || 4321;
 
 type Task = {[key: string]: string};
 
-async function renderTemplate(task: Task) {
+async function renderTemplate({task, numCompleted, numTotal}: TaskStats) {
   const template = await fs.readFile(templateFile, {encoding: 'utf8'});
   const fullDict = {};
   for (const k in task) {
@@ -46,7 +46,25 @@ async function renderTemplate(task: Task) {
   }
   fullDict['ALL_JSON'] = utils.htmlEntities(JSON.stringify(task, null, 2));
   fullDict['ALL_JSON_RAW'] = JSON.stringify(task);
-  return utils.renderTemplate(template, fullDict);
+  const userHtml = utils.renderTemplate(template, fullDict);
+
+  const sourceInputs = _.map(task, (v, k) =>
+      `<input type=hidden name="${k}" value="${utils.htmlEntities(v)}">`
+    ).join('\n');
+
+  return `
+<!doctype html>
+<html>
+<title>${numCompleted} / ${numTotal} - localturk</title>
+<body><form action=/submit method=post>
+<p>${numCompleted} / ${numTotal} </p>
+${sourceInputs}
+${userHtml}
+<hr/><input type=submit />
+</form>
+</body>
+</html>
+`;
 }
 
 async function readCompletedTasks(): Promise<Task[]> {
@@ -97,25 +115,10 @@ app.use(errorhandler());
 app.use(express.static(path.resolve(path.dirname(templateFile))));
 
 app.get('/', utils.wrapPromise(async (req, res) => {
-  const {task, numCompleted, numTotal} = await getNextTask();
-  console.log(task);
-  if (task) {
-    const templateHtml = await renderTemplate(task);
-    const sourceInputs = _.map(task, (v, k) =>
-        `<input type=hidden name="${k}" value="${utils.htmlEntities(v)}">`
-      ).join('\n');
-    const html = `<!doctype html>
-    <html>
-    <title>${numCompleted} / ${numTotal} - localturk</title>
-    <body><form action=/submit method=post>
-    <p>${numCompleted} / ${numTotal} </p>
-    ${sourceInputs}
-    ${templateHtml}
-    <hr/><input type=submit />
-    </form>
-    </body>
-    </html>
-    `;
+  const nextTask = await getNextTask();
+  if (nextTask.task) {
+    console.log(nextTask.task);
+    const html = await renderTemplate(nextTask);
     res.send(html);
   } else {
     res.send('DONE');
