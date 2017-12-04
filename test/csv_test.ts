@@ -112,7 +112,8 @@ describe('csv', () => {
       ['2', 'Dan,\nVK', 'VK,Dan']
     ];
     await csv.writeCsv('/tmp/test.csv', rows);
-    await csv.deleteLastRow('/tmp/test.csv');
+    const deleted = await csv.deleteLastRow('/tmp/test.csv');
+    expect(deleted).to.deep.equal(['2', 'Dan,\nVK', 'VK,Dan']);
     const data = await read('/tmp/test.csv');
     expect(data).to.equal(
       'id,"First,Last","Last,First"\n' +

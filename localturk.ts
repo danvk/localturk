@@ -145,7 +145,8 @@ app.post('/submit', utils.wrapPromise(async (req, res) => {
 }));
 
 app.post('/delete-last', utils.wrapPromise(async (req, res) => {
-  await csv.deleteLastRow(outputsFile);
+  const row = await csv.deleteLastRow(outputsFile);
+  console.log('Deleting', row);
   res.redirect('/');
 }));
 

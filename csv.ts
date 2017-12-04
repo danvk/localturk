@@ -158,6 +158,7 @@ export async function deleteLastRow(file: string) {
     rows.push(row);
   }
   await writeCsv(file, rows.slice(0, -1));
+  return rows[rows.length - 1];
 }
 
 export async function* readRowObjects(file: string) {
