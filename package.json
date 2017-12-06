@@ -6,6 +6,10 @@
   "repository": "https://github.com/danvk/localturk.git",
   "author": "Dan Vanderkam <danvdk@gmail.com>",
   "license": "MIT",
+  "bin": {
+    "localturk": "localturk.js",
+    "classify-images": "classify-images.js"
+  },
   "dependencies": {
     "@types/open": "^0.0.29",
     "commander": "^2.12.2",
