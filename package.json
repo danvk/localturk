@@ -7,8 +7,8 @@
   "author": "Dan Vanderkam <danvdk@gmail.com>",
   "license": "MIT",
   "bin": {
-    "localturk": "localturk.js",
-    "classify-images": "classify-images.js"
+    "localturk": "dist/localturk.js",
+    "classify-images": "dist/classify-images.js"
   },
   "dependencies": {
     "@types/open": "^0.0.29",
