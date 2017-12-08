@@ -19,7 +19,8 @@
     "express": "^4.16.2",
     "fs-extra": "^4.0.2",
     "lodash": "^4.17.4",
-    "open": "^0.0.5"
+    "open": "^0.0.5",
+    "temp": "^0.8.3"
   },
   "devDependencies": {
     "@types/chai": "^4.0.7",
@@ -32,6 +33,7 @@
     "@types/lodash": "^4.14.87",
     "@types/mocha": "^2.2.44",
     "@types/node": "^8.0.53",
+    "@types/temp": "^0.8.31",
     "chai": "^4.1.2",
     "mocha": "^4.0.1",
     "ts-node": "^3.3.0",
