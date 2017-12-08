@@ -38,5 +38,9 @@
     "mocha": "^4.0.1",
     "ts-node": "^3.3.0",
     "typescript": "^2.6.2"
+  },
+  "scripts": {
+    "tsc": "tsc",
+    "test": "mocha --require ts-node/register test/**/*.ts"
   }
 }
