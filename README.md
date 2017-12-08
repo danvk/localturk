@@ -1,3 +1,5 @@
+[![CircleCI](https://circleci.com/gh/danvk/localturk.svg?style=svg)](https://circleci.com/gh/danvk/localturk)
+
 localturk
 =========
 
@@ -21,7 +23,7 @@ Install:
 Run:
 
     cd localturk/sample
-    localturk --static_dir . transcribe.html tasks.csv outputs.csv
+    localturk transcribe.html tasks.csv outputs.csv
 
 Then visit http://localhost:4321/ to start Turking.
 
@@ -66,10 +68,30 @@ The use case described above (classifying images) is an extremely common one.
 To expedite this, localturk provides a separate script for doing image
 classification. The example above could be written as:
 
-
     classify-images --labels 'Has a red ball,Does not have a red ball' *.png
 
 This will bring up a web server with a UI for assigning one of those two labels
 to each image on your local file system. The results will go in `output.csv`.
 
 For more details, run `classify-images --help`.
+
+Development
+-----------
+
+To make changes to localturk, clone it and set it up using `yarn`:
+
+    yarn
+
+You can run `localturk.ts` or `classify-images.ts` directly using `ts-node`:
+
+    ts-node localturk.ts path/to/template.html path/to/tasks.csv path/to/output.csv
+
+To type check and run the tests:
+
+    yarn tsc
+    yarn test
+
+To publish a new version on npm, run:
+
+    yarn tsc
+    yarn publish
