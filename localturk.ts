@@ -39,7 +39,7 @@ const [templateFile, tasksFile, outputsFile] = args;
 const port = program.port || 4321;
 // --static-dir is particularly useful for classify-images, where the template file is in a
 // temporary directory but the image files could be anywhere.
-const staticDir = program['static-dir'] || path.dirname(templateFile);
+const staticDir = program['staticDir'] || path.dirname(templateFile);
 
 type Task = {[key: string]: string};
 let flash = '';  // this is used to show warnings in the web UI.
