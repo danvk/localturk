@@ -1,0 +1,6 @@
+*.log
+*_test.js
+*.ts
+tsconfig.json
+test
+sample
