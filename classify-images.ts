@@ -96,6 +96,6 @@ window.addEventListener("keydown", function(e) {
 fs.writeSync(templateInfo.fd, html);
 fs.closeSync(templateInfo.fd);
 
-const args = ['localturk', '-q', '--static_dir', '.', templateInfo.path, csvInfo.path, program.output];
+const args = ['localturk', '--static-dir', '.', templateInfo.path, csvInfo.path, program.output];
 console.log('Running ', args.join(' '));
 child_process.spawn(args[0], args.slice(1), {stdio: 'inherit'});

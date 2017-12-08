@@ -25,6 +25,8 @@ program
   .version('2.0.0')
   .usage('[options] template.html tasks.csv outputs.csv')
   .option('-p, --port <n>', 'Run on this port (default 4321)', parseInt)
+  .option('-s, --static-dir <dir>',
+          'Serve static content from this directory. Default is same directory as template file.')
   .option('-w, --write-template', 'Generate a stub template file based on the input CSV.')
   .parse(process.argv);
 
@@ -35,6 +37,9 @@ if (3 !== args.length) {
 
 const [templateFile, tasksFile, outputsFile] = args;
 const port = program.port || 4321;
+// --static-dir is particularly useful for classify-images, where the template file is in a
+// temporary directory but the image files could be anywhere.
+const staticDir = program['static-dir'] || path.dirname(templateFile);
 
 type Task = {[key: string]: string};
 let flash = '';  // this is used to show warnings in the web UI.
@@ -127,7 +132,7 @@ if (program['write-template']) {
 const app = express();
 app.use(bodyParser.urlencoded({extended: false}));
 app.use(errorhandler());
-app.use(express.static(path.resolve(path.dirname(templateFile))));
+app.use(express.static(path.resolve(staticDir)));
 
 app.get('/', utils.wrapPromise(async (req, res) => {
   const nextTask = await getNextTask();
