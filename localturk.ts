@@ -18,6 +18,7 @@ import open = require('open');
 import * as _ from 'lodash';
 
 import * as csv from './csv';
+import {makeTemplate} from './sample-template';
 import * as utils from './utils';
 import { outputFile } from 'fs-extra';
 
@@ -25,16 +26,27 @@ program
   .version('2.0.0')
   .usage('[options] template.html tasks.csv outputs.csv')
   .option('-p, --port <n>', 'Run on this port (default 4321)', parseInt)
+  .option('-s, --static-dir <dir>',
+          'Serve static content from this directory. Default is same directory as template file.')
   .option('-w, --write-template', 'Generate a stub template file based on the input CSV.')
   .parse(process.argv);
 
-const {args} = program;
-if (3 !== args.length) {
+const {args, writeTemplate} = program;
+if (!((3 === args.length && !writeTemplate) ||
+     (1 === args.length && writeTemplate))) {
   program.help();
+}
+if (writeTemplate) {
+  // tasks.csv is the only input with --write-template.
+  args.unshift('');
+  args.push('');
 }
 
 const [templateFile, tasksFile, outputsFile] = args;
 const port = program.port || 4321;
+// --static-dir is particularly useful for classify-images, where the template file is in a
+// temporary directory but the image files could be anywhere.
+const staticDir = program['staticDir'] || path.dirname(templateFile);
 
 type Task = {[key: string]: string};
 let flash = '';  // this is used to show warnings in the web UI.
@@ -45,6 +57,7 @@ async function renderTemplate({task, numCompleted, numTotal}: TaskStats) {
   for (const k in task) {
     fullDict[k] = utils.htmlEntities(task[k]);
   }
+  // Note: these two fields are not available in mechanical turk.
   fullDict['ALL_JSON'] = utils.htmlEntities(JSON.stringify(task, null, 2));
   fullDict['ALL_JSON_RAW'] = JSON.stringify(task);
   const userHtml = utils.renderTemplate(template, fullDict);
@@ -56,19 +69,31 @@ async function renderTemplate({task, numCompleted, numTotal}: TaskStats) {
       `<input type=hidden name="${k}" value="${utils.htmlEntities(v)}">`
     ).join('\n');
 
-  return `
-<!doctype html>
-<html>
-<title>${numCompleted} / ${numTotal} - localturk</title>
-<body><form action=/submit method=post>
-<p>${numCompleted} / ${numTotal} <span style="background: yellow">${thisFlash}</span></p>
-${sourceInputs}
-${userHtml}
-<hr/><input type=submit />
-</form>
-</body>
-</html>
-`;
+  return utils.dedent`
+    <!doctype html>
+    <html>
+    <title>${numCompleted} / ${numTotal} - localturk</title>
+    <body><form action=/submit method=post>
+    <p>${numCompleted} / ${numTotal} <span style="background: yellow">${thisFlash}</span></p>
+    ${sourceInputs}
+    ${userHtml}
+    <hr/><input type=submit />
+    </form>
+    <script>
+    // Support keyboard shortcuts via, e.g. <.. data-key="1" />
+    window.addEventListener("keydown", function(e) {
+      if (document.activeElement !== document.body) return;
+      var key = e.key;
+      const el = document.querySelector('[data-key="' + key + '"]');
+      if (el) {
+        e.preventDefault();
+        el.click();
+      }
+    });
+    </script>
+    </body>
+    </html>
+  `;
 }
 
 async function readCompletedTasks(): Promise<Task[]> {
@@ -119,15 +144,10 @@ async function getNextTask(): Promise<TaskStats> {
   }
 }
 
-if (program['write-template']) {
-  // TODO(danvk): implement.
-  process.exit(0);
-}
-
 const app = express();
 app.use(bodyParser.urlencoded({extended: false}));
 app.use(errorhandler());
-app.use(express.static(path.resolve(path.dirname(templateFile))));
+app.use(express.static(path.resolve(staticDir)));
 
 app.get('/', utils.wrapPromise(async (req, res) => {
   const nextTask = await getNextTask();
@@ -155,7 +175,17 @@ app.post('/delete-last', utils.wrapPromise(async (req, res) => {
   res.redirect('/');
 }));
 
-app.listen(port);
-const url = `http://localhost:${port}`;
-console.log('Running local turk on', url);
-open(url);
+
+if (writeTemplate) {
+  (async () => {
+    const columns = await csv.readHeaders(tasksFile);
+    console.log(makeTemplate(columns));
+  })().catch(e => {
+    console.error(e);
+  });
+} else {
+  app.listen(port);
+  const url = `http://localhost:${port}`;
+  console.log('Running local turk on', url);
+  open(url);
+}
