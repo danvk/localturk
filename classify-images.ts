@@ -58,39 +58,19 @@ fs.closeSync(csvInfo.fd);
 
 const buttonsHtml = program.labels.map((label, idx) => {
   const buttonText = `${label} (${1 + idx})`;
-  return `<button type="submit" id='${1+idx}' name="label" value="${label}">${escape(buttonText)}</button>`;
+  return `<button type="submit" data-key='${1+idx}' name="label" value="${label}">${escape(buttonText)}</button>`;
 }).join('&nbsp;');
 
 const widthHtml = program.max_width ? ` width="${program.max_width}"` : '';
 const undoHtml = dedent`
     </form>
     <form action="/delete-last" method="POST" style="display: inline-block">
-      <input type="submit" id="undo-button" value="Undo Last (z)">
+      <input type="submit" id="undo-button" data-key="z" value="Undo Last (z)">
     </form>`;
 let html = buttonsHtml + undoHtml + '\n<p><img src="${path}" ' + widthHtml + '></p>';
 
 // Add keyboard shortcuts. 1=first button, etc.
 html += dedent`
-    <script>
-    window.addEventListener("keydown", function(e) {
-      var code = e.keyCode;
-      if (code == 90) {
-        var el = document.getElementById("undo-button");
-        e.preventDefault();
-        el.click();
-        return;
-      }
-      var num = null;
-      if (code >= 48 && code <= 57) num = code - 48;  // numbers above keyboard
-      if (code >= 96 && code <= 105) num = code - 96;  // numpad
-      if (num === null) return;
-      var el = document.getElementById(num);
-      if (el) {
-        e.preventDefault();
-        el.click();
-      }
-    });
-    </script>
     <style>
       form { display: inline-block; }
       #undo-button { margin-left: 20px; }

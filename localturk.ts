@@ -37,6 +37,7 @@ if (!((3 === args.length && !writeTemplate) ||
   program.help();
 }
 if (writeTemplate) {
+  // tasks.csv is the only input with --write-template.
   args.unshift('');
   args.push('');
 }
@@ -78,6 +79,18 @@ async function renderTemplate({task, numCompleted, numTotal}: TaskStats) {
     ${userHtml}
     <hr/><input type=submit />
     </form>
+    <script>
+    // Support keyboard shortcuts via, e.g. <.. data-key="1" />
+    window.addEventListener("keydown", function(e) {
+      if (document.activeElement !== document.body) return;
+      var key = e.key;
+      const el = document.querySelector('[data-key="' + key + '"]');
+      if (el) {
+        e.preventDefault();
+        el.click();
+      }
+    });
+    </script>
     </body>
     </html>
   `;

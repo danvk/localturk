@@ -75,6 +75,23 @@ to each image on your local file system. The results will go in `output.csv`.
 
 For more details, run `classify-images --help`.
 
+Tips & Tricks
+-------------
+
+It can be hard to remember the exact format for template files. localturk can help! Run it with
+the `--write-template` argument to generate a template file for your input that you can edit:
+
+    localturk --write-template tasks.csv > template.html
+
+When you're going through many tasks, keyboard shortcuts can speed things up tremendously.
+localturk supports these via the `data-key` attribute on form elements. For example, make yourer
+submit button look like this:
+
+    <input type="submit" name="result" value="Good" data-key="d">
+
+Now, when you press `d`, it'll automatically click the "Good" button for you. _Note that this
+feature is not available on mechanical turk itself!_
+
 Development
 -----------
 
