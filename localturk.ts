@@ -1,5 +1,3 @@
-#!/usr/bin/env node
-
 /**
  * "Local Turk" server for running Mechanical Turk-like tasks locally.
  *
@@ -23,7 +21,7 @@ import * as utils from './utils';
 import { outputFile } from 'fs-extra';
 
 program
-  .version('2.0.1')
+  .version('2.0.2')
   .usage('[options] template.html tasks.csv outputs.csv')
   .option('-p, --port <n>', 'Run on this port (default 4321)', parseInt)
   .option('-s, --static-dir <dir>',

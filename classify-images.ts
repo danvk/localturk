@@ -1,5 +1,3 @@
-#!/usr/bin/env node
-
 /**
  * This is an optimization for a common use case of localturk: classifying
  * images. When you use this script, you can skip creating a CSV file of inputs
@@ -27,7 +25,7 @@ function list(val) {
 }
 
 program
-  .version('1.2.2')
+  .version('2.0.2')
   .usage('[options] /path/to/images/*.jpg')
   .option('-o, --output <file>',
           'Path to output CSV file (default output.csv)', 'output.csv')
