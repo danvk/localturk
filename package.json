@@ -1,6 +1,6 @@
 {
   "name": "localturk",
-  "version": "2.0.3",
+  "version": "2.0.4",
   "description": "Run Mechanical Turk-like tasks on your own.",
   "main": "index.js",
   "repository": "https://github.com/danvk/localturk.git",
