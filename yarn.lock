@@ -560,6 +560,10 @@ raw-body@2.3.2:
     iconv-lite "0.4.19"
     unpipe "1.0.0"
 
+reservoir@^0.1.2:
+  version "0.1.2"
+  resolved "https://registry.yarnpkg.com/reservoir/-/reservoir-0.1.2.tgz#f08eac156495123039cbc5ee06f3f58979e45605"
+
 rimraf@~2.2.6:
   version "2.2.8"
   resolved "https://registry.yarnpkg.com/rimraf/-/rimraf-2.2.8.tgz#e439be2aaee327321952730f99a8929e4fc50582"
