@@ -15,6 +15,7 @@ import * as fs from 'fs-extra';
 import * as path from 'path';
 import * as program from 'commander';
 import open = require('open');
+import Reservoir = require('reservoir');
 import * as _ from 'lodash';
 
 import * as csv from './csv';
@@ -28,10 +29,13 @@ program
   .option('-p, --port <n>', 'Run on this port (default 4321)', parseInt)
   .option('-s, --static-dir <dir>',
           'Serve static content from this directory. Default is same directory as template file.')
+  .option('-r, --random-order',
+          'Serve images in random order, rather than sequentially. This is useful for ' +
+          'generating valid subsamples or for minimizing collisions during group localturking.')
   .option('-w, --write-template', 'Generate a stub template file based on the input CSV.')
   .parse(process.argv);
 
-const {args, writeTemplate} = program;
+const {args, randomOrder, writeTemplate} = program;
 if (!((3 === args.length && !writeTemplate) ||
      (1 === args.length && writeTemplate))) {
   program.help();
@@ -128,17 +132,27 @@ interface TaskStats {
 
 async function getNextTask(): Promise<TaskStats> {
   const completedTasks = (await readCompletedTasks()).map(utils.normalizeValues);
+  let sampler = randomOrder ? Reservoir<Task>() : null;
   let nextTask: Task;
   let numTotal = 0;
   for await (const task of csv.readRowObjects(tasksFile)) {
     numTotal++;
-    if (!nextTask && !isTaskCompleted(utils.normalizeValues(task), completedTasks)) {
+    if (!sampler && nextTask) {
+      continue;  // we're only counting at this point.
+    }
+    if (isTaskCompleted(utils.normalizeValues(task), completedTasks)) {
+      continue;
+    }
+
+    if (sampler) {
+      sampler.pushSome(task);
+    } else {
       nextTask = task;
     }
   }
 
   return {
-    task: nextTask,
+    task: sampler ? sampler[0] : nextTask,
     numCompleted: _.size(completedTasks),
     numTotal,
   }
