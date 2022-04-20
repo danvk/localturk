@@ -8,7 +8,6 @@
  *   localturk [--options] template.html tasks.csv outputs.csv
  */
 
-import * as bodyParser from 'body-parser';
 import * as errorhandler from 'errorhandler';
 import * as express from 'express';
 import * as fs from 'fs-extra';
@@ -159,8 +158,9 @@ async function getNextTask(): Promise<TaskStats> {
 }
 
 const app = express();
-app.use(bodyParser.urlencoded({extended: false}));
 app.use(errorhandler());
+app.use(express.json({limit: "50mb"}));
+app.use(express.urlencoded({limit: "50mb", extended: true, parameterLimit:50000}));
 app.use(express.static(path.resolve(staticDir)));
 
 app.get('/', utils.wrapPromise(async (req, res) => {
