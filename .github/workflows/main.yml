@@ -34,10 +34,17 @@ jobs:
         run: yarn
 
       - name: Log Versions
-        run: yarn tsc --version && yarn mocha --version
+        run: yarn tsc --version && yarn jest --version
+
+      - name: Prettier
+        run: yarn format:check
 
       - name: Type Check
         run: yarn tsc
+
+      # knip runs after tsc so that files can reference the `dist` dir.
+      - name: Knip
+        run: yarn knip
 
       - name: Unit tests
         run: yarn test

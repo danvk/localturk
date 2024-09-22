@@ -11,7 +11,6 @@
     "classify-images": "dist/classify-images.js"
   },
   "dependencies": {
-    "@commander-js/extra-typings": "^12.1.0",
     "commander": "^12.1.0",
     "csv-parse": "^5.5.6",
     "csv-stringify": "^6.5.1",
@@ -22,26 +21,39 @@
     "lodash": "^4.17.4",
     "open": "8",
     "reservoir": "^0.1.2",
+    "serve-static": "^1.16.2",
     "temp": "^0.8.3"
   },
   "devDependencies": {
-    "@types/chai": "^4.0.7",
     "@types/errorhandler": "^0.0.32",
     "@types/escape-html": "^1.0.4",
     "@types/express": "^4.0.39",
     "@types/fs-extra": "^4.0.5",
+    "@types/jest": "^29.5.13",
     "@types/lodash": "^4.14.87",
-    "@types/mocha": "^2.2.44",
     "@types/node": "18",
     "@types/reservoir": "^0.1.6",
     "@types/temp": "^0.8.31",
-    "chai": "^4.1.2",
-    "mocha": "^4.0.1",
+    "jest": "^29.7.0",
+    "knip": "^5.30.4",
+    "prettier": "^3.3.3",
+    "ts-jest": "^29.2.5",
     "ts-node": "^10.9.2",
     "typescript": "^5.6.2"
   },
   "scripts": {
+    "demo": "ts-node localturk.ts --random-order sample/transcribe.html sample/tasks.csv sample/outputs.csv",
+    "format": "prettier --write '*.ts' 'test/*.ts'",
+    "format:check": "prettier --check '*.ts' 'test/*.ts'",
     "tsc": "tsc",
-    "test": "mocha --require ts-node/register test/**/*.ts"
+    "test": "jest"
+  },
+  "prettier": {
+    "arrowParens": "avoid",
+    "printWidth": 100,
+    "singleQuote": true,
+    "trailingComma": "all",
+    "bracketSpacing": false,
+    "jsxBracketSameLine": true
   }
 }

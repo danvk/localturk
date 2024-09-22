@@ -3,7 +3,7 @@ import {stringify} from 'csv-stringify/sync';
 import * as fs from 'fs-extra';
 
 const csvOptions: csvParse.Options = {
-  skip_empty_lines: true
+  skip_empty_lines: true,
 };
 
 interface Row {
@@ -20,7 +20,7 @@ interface Done {
 type RowResult = Row | Error | Done;
 
 function isPromise(x: any): x is Promise<any> {
-  return ('then' in x);
+  return 'then' in x;
 }
 
 /** Read a CSV file line-by-line. */
@@ -29,15 +29,16 @@ export async function* readRows(file: string) {
   const stream = fs.createReadStream(file, 'utf8');
 
   let dataCallback: () => void | undefined;
-  const mkBarrier = () => new Promise<void>((resolve, reject) => {
-    dataCallback = resolve;
-  });
+  const mkBarrier = () =>
+    new Promise<void>((resolve, reject) => {
+      dataCallback = resolve;
+    });
 
   // TODO(danvk): use a deque
-  const rows: (RowResult|Promise<void>)[] = [mkBarrier()];
+  const rows: (RowResult | Promise<void>)[] = [mkBarrier()];
   parser.on('readable', () => {
     let row;
-    while (row = parser.read()) {
+    while ((row = parser.read())) {
       rows.push({type: 'row', value: row});
     }
     const oldCb = dataCallback;
@@ -78,7 +79,7 @@ export async function readHeaders(file: string) {
   for await (const row of readRows(file)) {
     return row;
   }
-  throw new Error(`Unexpected empty file: ${file}`)
+  throw new Error(`Unexpected empty file: ${file}`);
 }
 
 /** Write a CSV file */
@@ -98,7 +99,7 @@ export async function appendRow(file: string, row: {[column: string]: string}) {
   if (!exists) {
     // Easy: write the whole file.
     const header = Object.keys(row);
-    const rows = [header, header.map(k => row[k])]
+    const rows = [header, header.map(k => row[k])];
     return writeCsv(file, rows);
   }
 
@@ -111,7 +112,7 @@ export async function appendRow(file: string, row: {[column: string]: string}) {
   const headerToIndex: {[header: string]: number} = {};
   headers.forEach((header, i) => {
     headerToIndex[header] = i;
-  })
+  });
 
   // Check if there are any new headers in the row.
   const newHeaders = [];
@@ -133,11 +134,11 @@ export async function appendRow(file: string, row: {[column: string]: string}) {
   } else {
     // write the new row
     const newRow = headers.map(k => row[k] || '');
-    await lines.return();  // close the file for reading.
+    await lines.return(); // close the file for reading.
     // Add a newline if the file doesn't end with one.
     const f = fs.openSync(file, 'a+');
     const {size} = fs.fstatSync(f);
-    const { buffer } = await fs.read(f, Buffer.alloc(1), 0, 1, size - 1);
+    const {buffer} = await fs.read(f, Buffer.alloc(1), 0, 1, size - 1);
     const hasTrailingNewline = buffer[0] == '\n'.charCodeAt(0);
     const lineStr = (hasTrailingNewline ? '' : '\n') + stringify([newRow]);
     await fs.appendFile(f, lineStr);
