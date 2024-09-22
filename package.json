@@ -37,11 +37,22 @@
     "@types/temp": "^0.8.31",
     "chai": "^4.1.2",
     "mocha": "^4.0.1",
+    "prettier": "^3.3.3",
     "ts-node": "^10.9.2",
     "typescript": "^5.6.2"
   },
   "scripts": {
+    "format": "prettier --write '*.ts' 'test/*.ts'",
+    "format:check": "prettier --check '*.ts' 'test/*.ts'",
     "tsc": "tsc",
     "test": "mocha --require ts-node/register test/**/*.ts"
+  },
+  "prettier": {
+    "arrowParens": "avoid",
+    "printWidth": 100,
+    "singleQuote": true,
+    "trailingComma": "all",
+    "bracketSpacing": false,
+    "jsxBracketSameLine": true
   }
 }
