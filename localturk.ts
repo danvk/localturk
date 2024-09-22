@@ -202,9 +202,8 @@ async function getTaskNum(n: number): Promise<TaskStats> {
   const completedTasks = await readCompletedTasks();  // just getting the count.
   let i = 0;
   let numTotal = 0;
-  let taskN;;
+  let taskN;
   for await (const task of csv.readRowObjects(tasksFile)) {
-    task.ROW_NUMBER = String(numTotal + 1);
     numTotal++;
     if (i === n) {
       taskN = task;
