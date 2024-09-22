@@ -13,7 +13,7 @@ import express from 'express';
 import serveStatic from 'serve-static';
 import fs from 'fs-extra';
 import path from 'path';
-import program from 'commander';
+import {Command} from 'commander';
 import open from 'open';
 import Reservoir from 'reservoir';
 import _ from 'lodash';
@@ -32,6 +32,16 @@ function collect(val: string, memo: Record<string, string>) {
   memo[key] = value;
   return memo;
 }
+
+interface CLIArgs {
+  port: number;
+  var: Record<string, string>;
+  staticDir: string;
+  randomOrder: boolean;
+  writeTemplate: boolean;
+}
+
+const program = new Command() as (Command & CLIArgs);
 
 program
   .version('2.1.1')
