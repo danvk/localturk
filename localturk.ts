@@ -45,7 +45,7 @@ const program = new Command();
 
 // If you add an option here, consider adding it in classify-images.ts as well.
 program
-  .version('2.1.1')
+  .version('2.2.0')
   .usage('[options] template.html tasks.csv outputs.csv')
   .option('-p, --port <n>', 'Run on this port (default 4321)', parseInt)
   .option(
