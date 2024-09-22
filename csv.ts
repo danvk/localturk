@@ -135,8 +135,13 @@ export async function appendRow(file: string, row: {[column: string]: string}) {
     const newRow = headers.map(k => row[k] || '');
     await lines.return();  // close the file for reading.
     // Add a newline if the file doesn't end with one.
-
-    await fs.appendFile(file, stringify([newRow]));
+    const f = fs.openSync(file, 'a+');
+    const {size} = fs.fstatSync(f);
+    const { buffer } = await fs.read(f, Buffer.alloc(1), 0, 1, size - 1);
+    const hasTrailingNewline = buffer[0] == '\n'.charCodeAt(0);
+    const lineStr = (hasTrailingNewline ? '' : '\n') + stringify([newRow]);
+    await fs.appendFile(f, lineStr);
+    await fs.close(f);
   }
 }
 

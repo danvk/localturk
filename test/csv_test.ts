@@ -116,7 +116,9 @@ describe('csv', () => {
   it('should append a column to a CSV file', async () => {
     await ensureDeleted('/tmp/test.csv');
     await csv.appendRow('/tmp/test.csv', {a: '1', b: '2'});
+    expect(await read('/tmp/test.csv')).to.equal('a,b\n1,2\n');
     await csv.appendRow('/tmp/test.csv', {b: '1', a: '2'});
+    expect(await read('/tmp/test.csv')).to.equal('a,b\n1,2\n2,1\n');
     await csv.appendRow('/tmp/test.csv', {b: '3', c: '4'});
     expect(await read('/tmp/test.csv')).to.equal('a,b,c\n1,2,\n2,1,\n,3,4\n');
   });
