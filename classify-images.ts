@@ -19,6 +19,7 @@ import fs from 'fs';
 import {Command} from 'commander';
 
 import {dedent} from './utils';
+import path from 'path';
 
 const temp = require('temp').track();
 
@@ -68,11 +69,14 @@ if (fs.existsSync(options.output)) {
 const csvInfo = temp.openSync({suffix: '.csv'});
 const templateInfo = temp.openSync({suffix: '.html'});
 
-const images = program.args;
+let staticDir: string | null = null;
+let images = program.args;
 if (images.length === 1 && images[0].endsWith('.txt')) {
   fs.writeSync(csvInfo.fd, 'path\n');
   fs.writeSync(csvInfo.fd, fs.readFileSync(images[0], 'utf8'));
 } else {
+  staticDir = path.dirname(images[0]);
+  images = images.map(p => path.relative(staticDir!, p));
   fs.writeSync(csvInfo.fd, 'path\n' + images.join('\n') + '\n');
 }
 fs.closeSync(csvInfo.fd);
@@ -100,7 +104,10 @@ html += dedent`
 fs.writeSync(templateInfo.fd, html);
 fs.closeSync(templateInfo.fd);
 
-const opts = ['--static-dir', '.'];
+const opts = [];
+if (staticDir) {
+  opts.push('--static-dir', staticDir);
+}
 if (options.port) {
   opts.push('--port', options.port.toString());
 }
