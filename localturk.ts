@@ -8,24 +8,36 @@
  *   localturk [--options] template.html tasks.csv outputs.csv
  */
 
-import * as errorhandler from 'errorhandler';
-import * as express from 'express';
-import * as fs from 'fs-extra';
-import * as path from 'path';
-import * as program from 'commander';
-import open = require('open');
-import Reservoir = require('reservoir');
-import * as _ from 'lodash';
+import errorhandler from 'errorhandler';
+import express from 'express';
+import serveStatic from 'serve-static';
+import fs from 'fs-extra';
+import path from 'path';
+import program from 'commander';
+import open from 'open';
+import Reservoir from 'reservoir';
+import _ from 'lodash';
 
 import * as csv from './csv';
 import {makeTemplate} from './sample-template';
 import * as utils from './utils';
-import { outputFile } from 'fs-extra';
+
+function collect(val: string, memo: Record<string, string>) {
+  const idx = val.indexOf('=');
+  if (idx === -1) {
+    throw new Error('Expected --var key=value');
+  }
+  const key = val.slice(0, idx);
+  const value = val.slice(idx + 1);
+  memo[key] = value;
+  return memo;
+}
 
 program
   .version('2.1.1')
   .usage('[options] template.html tasks.csv outputs.csv')
   .option('-p, --port <n>', 'Run on this port (default 4321)', parseInt)
+  .option('--var <items>', 'Provide additional varibles to the template. Maybe be specified multiple times.', collect, {})
   .option('-s, --static-dir <dir>',
           'Serve static content from this directory. Default is same directory as template file.')
   .option('-r, --random-order',
@@ -56,13 +68,16 @@ let flash = '';  // this is used to show warnings in the web UI.
 
 async function renderTemplate({task, numCompleted, numTotal}: TaskStats) {
   const template = await fs.readFile(templateFile, {encoding: 'utf8'});
-  const fullDict = {};
+  const fullDict: Record<string, string> = {};
   for (const k in task) {
     fullDict[k] = utils.htmlEntities(task[k]);
   }
   // Note: these two fields are not available in mechanical turk.
   fullDict['ALL_JSON'] = utils.htmlEntities(JSON.stringify(task, null, 2));
   fullDict['ALL_JSON_RAW'] = JSON.stringify(task);
+  for (var [k, v] of Object.entries(program.var)) {
+    fullDict[k] = utils.htmlEntities(v as string);
+  }
   const userHtml = utils.renderTemplate(template, fullDict);
 
   const thisFlash = flash;
@@ -104,7 +119,7 @@ async function readCompletedTasks(): Promise<Task[]> {
   return csv.readAllRowObjects(outputsFile);
 }
 
-function isTaskCompleted(task, completedTasks) {
+function isTaskCompleted(task: Task, completedTasks: readonly Task[]) {
   const normTask = utils.normalizeValues(task);
   for (const d of completedTasks) {
     if (utils.isSupersetOf(d, normTask)) return true;
@@ -132,7 +147,7 @@ interface TaskStats {
 async function getNextTask(): Promise<TaskStats> {
   const completedTasks = (await readCompletedTasks()).map(utils.normalizeValues);
   let sampler = randomOrder ? Reservoir<Task>() : null;
-  let nextTask: Task;
+  let nextTask: Task | undefined;
   let numTotal = 0;
   for await (const task of csv.readRowObjects(tasksFile)) {
     numTotal++;
@@ -160,8 +175,8 @@ async function getNextTask(): Promise<TaskStats> {
 const app = express();
 app.use(errorhandler());
 app.use(express.json({limit: "50mb"}));
-app.use(express.urlencoded({limit: "50mb", extended: true, parameterLimit:50000}));
-app.use(express.static(path.resolve(staticDir)));
+app.use(express.urlencoded({limit: "50mb", extended: false, parameterLimit: 50_000}));
+app.use(serveStatic(path.resolve(staticDir)));
 
 app.get('/', utils.wrapPromise(async (req, res) => {
   const nextTask = await getNextTask();
