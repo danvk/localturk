@@ -41,21 +41,29 @@ program
   .version('2.1.1')
   .usage('[options] /path/to/images/*.jpg | images.txt')
   .option('-p, --port <n>', 'Run on this port (default 4321)', parseInt)
-  .option('-o, --output <file>',
-          'Path to output CSV file (default output.csv)', 'output.csv')
-  .option('-l, --labels <csv>',
-          'Comma-separated list of choices of labels', list, ['Yes', 'No'])
-  .option('--shortcuts <a,b,c>', 'Comma-separated list of keyboard shortcuts for labels. Default is 1, 2, etc.', list, null)
-  .option('-w, --max_width <pixels>',
-          'Make the images this width when displaying in-browser', parseInt)
-  .option('-r, --random-order',
+  .option('-o, --output <file>', 'Path to output CSV file (default output.csv)', 'output.csv')
+  .option('-l, --labels <csv>', 'Comma-separated list of choices of labels', list, ['Yes', 'No'])
+  .option(
+    '--shortcuts <a,b,c>',
+    'Comma-separated list of keyboard shortcuts for labels. Default is 1, 2, etc.',
+    list,
+    null,
+  )
+  .option(
+    '-w, --max_width <pixels>',
+    'Make the images this width when displaying in-browser',
+    parseInt,
+  )
+  .option(
+    '-r, --random-order',
     'Serve images in random order, rather than sequentially. This is useful for ' +
-    'generating valid subsamples or for minimizing collisions during group localturking.')
-  .parse()
+      'generating valid subsamples or for minimizing collisions during group localturking.',
+  )
+  .parse();
 
 if (program.args.length == 0) {
   console.error('You must specify at least one image file!\n');
-  program.help();  // exits
+  program.help(); // exits
 }
 const options = program.opts<CLIArgs>();
 let {shortcuts} = options;
@@ -95,10 +103,12 @@ if (images.length === 1 && images[0].endsWith('.txt')) {
 fs.closeSync(csvInfo.fd);
 
 // Add keyboard shortcuts. 1=first button, etc.
-const buttonsHtml = options.labels.map((label, idx) => {
-  const buttonText = `${label} (${shortcuts[idx]})`;
-  return `<button type="submit" data-key='${shortcuts[idx]}' name="label" value="${label}">${escape(buttonText)}</button>`;
-}).join('&nbsp;');
+const buttonsHtml = options.labels
+  .map((label, idx) => {
+    const buttonText = `${label} (${shortcuts[idx]})`;
+    return `<button type="submit" data-key='${shortcuts[idx]}' name="label" value="${label}">${escape(buttonText)}</button>`;
+  })
+  .join('&nbsp;');
 
 const widthHtml = options.max_width ? ` width="${options.max_width}"` : '';
 const undoHtml = dedent`

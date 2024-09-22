@@ -7,20 +7,12 @@ import {expect} from 'chai';
 describe('csv', () => {
   it('should read CSV headers', async () => {
     const headers = await csv.readHeaders('./test/test.csv');
-    expect(headers).to.deep.equal([
-      'id',
-      'First',
-      'Last'
-    ]);
+    expect(headers).to.deep.equal(['id', 'First', 'Last']);
   });
 
   it('should read quoted CSV headers', async () => {
     const headers = await csv.readHeaders('./test/quoted.csv');
-    expect(headers).to.deep.equal([
-      'id',
-      'First Name',
-      'Last,Name'
-    ]);
+    expect(headers).to.deep.equal(['id', 'First Name', 'Last,Name']);
   });
 
   it('should read lines in a simple CSV file', async () => {
@@ -58,7 +50,7 @@ describe('csv', () => {
         'images/0.png',
         'images/1.png',
         'Lorem ipsum dolor sit amet, consectetur adipsiscing elit.',
-        'Integer vulputate augue a sem pellentesque pharetra.'
+        'Integer vulputate augue a sem pellentesque pharetra.',
       ],
     ]);
   });
@@ -74,29 +66,23 @@ describe('csv', () => {
     const rows = [
       ['id', 'First', 'Last'],
       ['1', 'Jane', 'Doe'],
-      ['2', 'Dan', 'VK']
+      ['2', 'Dan', 'VK'],
     ];
     await csv.writeCsv('/tmp/test.csv', rows);
     const data = await read('/tmp/test.csv');
-    expect(data).to.equal(
-      'id,First,Last\n' +
-      '1,Jane,Doe\n' +
-      '2,Dan,VK\n'
-    );
+    expect(data).to.equal('id,First,Last\n' + '1,Jane,Doe\n' + '2,Dan,VK\n');
   });
 
   it('should write a complex CSV file', async () => {
     const rows = [
       ['id', 'First,Last', 'Last,First'],
       ['1', 'Jane,Doe', 'Doe,Jane'],
-      ['2', 'Dan,\nVK', 'VK,Dan']
+      ['2', 'Dan,\nVK', 'VK,Dan'],
     ];
     await csv.writeCsv('/tmp/test.csv', rows);
     const data = await read('/tmp/test.csv');
     expect(data).to.equal(
-      'id,"First,Last","Last,First"\n' +
-      '1,"Jane,Doe","Doe,Jane"\n' +
-      '2,"Dan,\nVK","VK,Dan"\n'
+      'id,"First,Last","Last,First"\n' + '1,"Jane,Doe","Doe,Jane"\n' + '2,"Dan,\nVK","VK,Dan"\n',
     );
   });
 
@@ -125,7 +111,12 @@ describe('csv', () => {
 
   it('should append to a CSV file without trailing newline', async () => {
     fs.copyFileSync('./sample/outputs.csv', '/tmp/test.csv');
-    await csv.appendRow('/tmp/test.csv', {image1: 'a.png', image2: 'b.png', line1: 'line1', line2: 'line2'});
+    await csv.appendRow('/tmp/test.csv', {
+      image1: 'a.png',
+      image2: 'b.png',
+      line1: 'line1',
+      line2: 'line2',
+    });
     const rows = [];
     for await (const row of csv.readRows('/tmp/test.csv')) {
       rows.push(row);
@@ -136,9 +127,9 @@ describe('csv', () => {
         'images/0.png',
         'images/1.png',
         'Lorem ipsum dolor sit amet, consectetur adipsiscing elit.',
-        'Integer vulputate augue a sem pellentesque pharetra.'
+        'Integer vulputate augue a sem pellentesque pharetra.',
       ],
-      ['a.png', 'b.png', 'line1', 'line2']
+      ['a.png', 'b.png', 'line1', 'line2'],
     ]);
   });
 
@@ -146,15 +137,12 @@ describe('csv', () => {
     const rows = [
       ['id', 'First,Last', 'Last,First'],
       ['1', 'Jane,Doe', 'Doe,Jane'],
-      ['2', 'Dan,\nVK', 'VK,Dan']
+      ['2', 'Dan,\nVK', 'VK,Dan'],
     ];
     await csv.writeCsv('/tmp/test.csv', rows);
     const deleted = await csv.deleteLastRow('/tmp/test.csv');
     expect(deleted).to.deep.equal(['2', 'Dan,\nVK', 'VK,Dan']);
     const data = await read('/tmp/test.csv');
-    expect(data).to.equal(
-      'id,"First,Last","Last,First"\n' +
-      '1,"Jane,Doe","Doe,Jane"\n'
-    );
+    expect(data).to.equal('id,"First,Last","Last,First"\n' + '1,"Jane,Doe","Doe,Jane"\n');
   });
 });

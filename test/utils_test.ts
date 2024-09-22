@@ -16,14 +16,16 @@ describe('utils', () => {
   });
 
   it('should normalize newlines', () => {
-    expect(utils.normalizeValues({
-      a: 'foo\nbar',
-      b: 'foo\r\nbar',
-      c: 'foo\rbar'
-    })).to.deep.equal({
+    expect(
+      utils.normalizeValues({
+        a: 'foo\nbar',
+        b: 'foo\r\nbar',
+        c: 'foo\rbar',
+      }),
+    ).to.deep.equal({
       a: 'foo\nbar',
       b: 'foo\nbar',
-      c: 'foo\nbar'
+      c: 'foo\nbar',
     });
   });
 

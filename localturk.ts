@@ -48,12 +48,21 @@ program
   .version('2.1.1')
   .usage('[options] template.html tasks.csv outputs.csv')
   .option('-p, --port <n>', 'Run on this port (default 4321)', parseInt)
-  .option('--var <items>', 'Provide additional varibles to the template. Maybe be specified multiple times.', collect, {})
-  .option('-s, --static-dir <dir>',
-          'Serve static content from this directory. Default is same directory as template file.')
-  .option('-r, --random-order',
-          'Serve images in random order, rather than sequentially. This is useful for ' +
-          'generating valid subsamples or for minimizing collisions during group localturking.')
+  .option(
+    '--var <items>',
+    'Provide additional varibles to the template. Maybe be specified multiple times.',
+    collect,
+    {},
+  )
+  .option(
+    '-s, --static-dir <dir>',
+    'Serve static content from this directory. Default is same directory as template file.',
+  )
+  .option(
+    '-r, --random-order',
+    'Serve images in random order, rather than sequentially. This is useful for ' +
+      'generating valid subsamples or for minimizing collisions during group localturking.',
+  )
   .option('-w, --write-template', 'Generate a stub template file based on the input CSV.')
   .parse();
 
@@ -61,8 +70,7 @@ const options = program.opts<CLIArgs>();
 
 const {args} = program;
 const {randomOrder, writeTemplate} = options;
-if (!((3 === args.length && !writeTemplate) ||
-     (1 === args.length && writeTemplate))) {
+if (!((3 === args.length && !writeTemplate) || (1 === args.length && writeTemplate))) {
   program.help();
 }
 if (writeTemplate) {
@@ -78,7 +86,7 @@ const port = options.port || 4321;
 const staticDir = options['staticDir'] || path.dirname(templateFile);
 
 type Task = {[key: string]: string};
-let flash = '';  // this is used to show warnings in the web UI.
+let flash = ''; // this is used to show warnings in the web UI.
 
 async function renderTemplate({task, numCompleted, rowNumber, numTotal}: TaskStats) {
   const template = await fs.readFile(templateFile, {encoding: 'utf8'});
@@ -98,9 +106,10 @@ async function renderTemplate({task, numCompleted, rowNumber, numTotal}: TaskSta
   const thisFlash = flash;
   flash = '';
 
-  const sourceInputs = _.map(task, (v, k) =>
-      `<input type=hidden name="${k}" value="${utils.htmlEntities(v)}">`
-    ).join('\n');
+  const sourceInputs = _.map(
+    task,
+    (v, k) => `<input type=hidden name="${k}" value="${utils.htmlEntities(v)}">`,
+  ).join('\n');
 
   return utils.dedent`
     <!doctype html>
@@ -150,7 +159,7 @@ async function checkTaskOutput(task: Task) {
   // your form elements.
   const headers = await csv.readHeaders(tasksFile);
   for (const k in task) {
-    if (headers.indexOf(k) === -1) return;  // there's a new key.
+    if (headers.indexOf(k) === -1) return; // there's a new key.
   }
   flash = 'No new keys in output. Make sure your &lt;input&gt; elements have "name" attributes';
 }
@@ -170,7 +179,7 @@ async function getNextTask(): Promise<TaskStats> {
   for await (const task of csv.readRowObjects(tasksFile)) {
     numTotal++;
     if (!sampler && nextTask) {
-      continue;  // we're only counting at this point.
+      continue; // we're only counting at this point.
     }
     if (isTaskCompleted(utils.normalizeValues(task), completedTasks)) {
       continue;
@@ -195,11 +204,11 @@ async function getNextTask(): Promise<TaskStats> {
     numCompleted: _.size(completedTasks),
     rowNumber,
     numTotal,
-  }
+  };
 }
 
 async function getTaskNum(n: number): Promise<TaskStats> {
-  const completedTasks = await readCompletedTasks();  // just getting the count.
+  const completedTasks = await readCompletedTasks(); // just getting the count.
   let i = 0;
   let numTotal = 0;
   let taskN;
@@ -216,49 +225,60 @@ async function getTaskNum(n: number): Promise<TaskStats> {
       numCompleted: _.size(completedTasks),
       rowNumber: n,
       numTotal,
-    }
+    };
   }
   throw new Error('Task not found');
 }
 
 const app = express();
 app.use(errorhandler());
-app.use(express.json({limit: "50mb"}));
-app.use(express.urlencoded({limit: "50mb", extended: false, parameterLimit: 50_000}));
+app.use(express.json({limit: '50mb'}));
+app.use(express.urlencoded({limit: '50mb', extended: false, parameterLimit: 50_000}));
 app.use(serveStatic(path.resolve(staticDir)));
 
-app.get('/', utils.wrapPromise(async (req, res) => {
-  const nextTask = await getNextTask();
-  if (nextTask.task) {
-    console.log(nextTask.task);
-    const html = await renderTemplate(nextTask);
+app.get(
+  '/',
+  utils.wrapPromise(async (req, res) => {
+    const nextTask = await getNextTask();
+    if (nextTask.task) {
+      console.log(nextTask.task);
+      const html = await renderTemplate(nextTask);
+      res.send(html);
+    } else {
+      res.send('DONE');
+      process.exit(0);
+    }
+  }),
+);
+
+app.get(
+  '/:num(\\d+)',
+  utils.wrapPromise(async (req, res) => {
+    const task = await getTaskNum(parseInt(req.params.num));
+    const html = await renderTemplate(task);
     res.send(html);
-  } else {
-    res.send('DONE');
-    process.exit(0);
-  }
-}));
+  }),
+);
 
-app.get('/:num(\\d+)', utils.wrapPromise(async (req, res) => {
-  const task = await getTaskNum(parseInt(req.params.num));
-  const html = await renderTemplate(task);
-  res.send(html);
-}));
+app.post(
+  '/submit',
+  utils.wrapPromise(async (req, res) => {
+    const task: Task = req.body;
+    await csv.appendRow(outputsFile, task);
+    checkTaskOutput(task); // sets the "flash" variable with any errors.
+    console.log('Saved ' + JSON.stringify(task));
+    res.redirect('/');
+  }),
+);
 
-app.post('/submit', utils.wrapPromise(async (req, res) => {
-  const task: Task = req.body;
-  await csv.appendRow(outputsFile, task);
-  checkTaskOutput(task);  // sets the "flash" variable with any errors.
-  console.log('Saved ' + JSON.stringify(task));
-  res.redirect('/');
-}));
-
-app.post('/delete-last', utils.wrapPromise(async (req, res) => {
-  const row = await csv.deleteLastRow(outputsFile);
-  console.log('Deleting', row);
-  res.redirect('/');
-}));
-
+app.post(
+  '/delete-last',
+  utils.wrapPromise(async (req, res) => {
+    const row = await csv.deleteLastRow(outputsFile);
+    console.log('Deleting', row);
+    res.redirect('/');
+  }),
+);
 
 if (writeTemplate) {
   (async () => {
