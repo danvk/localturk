@@ -41,7 +41,7 @@ interface CLIArgs {
   writeTemplate: boolean;
 }
 
-const program = new Command() as (Command & CLIArgs);
+const program = new Command();
 
 program
   .version('2.1.1')
@@ -54,9 +54,12 @@ program
           'Serve images in random order, rather than sequentially. This is useful for ' +
           'generating valid subsamples or for minimizing collisions during group localturking.')
   .option('-w, --write-template', 'Generate a stub template file based on the input CSV.')
-  .parse(process.argv);
+  .parse();
 
-const {args, randomOrder, writeTemplate} = program;
+const options = program.opts<CLIArgs>();
+
+const {args} = program;
+const {randomOrder, writeTemplate} = options;
 if (!((3 === args.length && !writeTemplate) ||
      (1 === args.length && writeTemplate))) {
   program.help();
