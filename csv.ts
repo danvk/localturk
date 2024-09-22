@@ -28,7 +28,6 @@ export async function* readRows(file: string) {
   const parser = csvParse.parse(csvOptions);
   const stream = fs.createReadStream(file, 'utf8');
 
-  let isDone = false;
   let dataCallback: () => void | undefined;
   const mkBarrier = () => new Promise<void>((resolve, reject) => {
     dataCallback = resolve;
@@ -135,6 +134,8 @@ export async function appendRow(file: string, row: {[column: string]: string}) {
     // write the new row
     const newRow = headers.map(k => row[k] || '');
     await lines.return();  // close the file for reading.
+    // Add a newline if the file doesn't end with one.
+
     await fs.appendFile(file, stringify([newRow]));
   }
 }
