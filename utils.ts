@@ -9,7 +9,7 @@ export function htmlEntities(str: string) {
       .replace(/"/g, '&quot;');
 }
 
-type Task = {[key: string]: string};
+export type Task = Record<string, string>;
 
 /** Does ${k} --> v interpolation */
 export function renderTemplate(template: string, data: Task) {

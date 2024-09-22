@@ -47,6 +47,22 @@ describe('csv', () => {
     ]);
   });
 
+  it('should read line from a CSV file without a trailing newline', async () => {
+    const rows = [];
+    for await (const row of csv.readRows('./sample/outputs.csv')) {
+      rows.push(row);
+    }
+    expect(rows).to.deep.equal([
+      ['image1', 'image2', 'line1', 'line2'],
+      [
+        'images/0.png',
+        'images/1.png',
+        'Lorem ipsum dolor sit amet, consectetur adipsiscing elit.',
+        'Integer vulputate augue a sem pellentesque pharetra.'
+      ],
+    ]);
+  });
+
   const read = (file: string) => fs.readFile(file, {encoding: 'utf8'});
   const ensureDeleted = async (file: string) => {
     try {
@@ -100,9 +116,30 @@ describe('csv', () => {
   it('should append a column to a CSV file', async () => {
     await ensureDeleted('/tmp/test.csv');
     await csv.appendRow('/tmp/test.csv', {a: '1', b: '2'});
+    expect(await read('/tmp/test.csv')).to.equal('a,b\n1,2\n');
     await csv.appendRow('/tmp/test.csv', {b: '1', a: '2'});
+    expect(await read('/tmp/test.csv')).to.equal('a,b\n1,2\n2,1\n');
     await csv.appendRow('/tmp/test.csv', {b: '3', c: '4'});
     expect(await read('/tmp/test.csv')).to.equal('a,b,c\n1,2,\n2,1,\n,3,4\n');
+  });
+
+  it('should append to a CSV file without trailing newline', async () => {
+    fs.copyFileSync('./sample/outputs.csv', '/tmp/test.csv');
+    await csv.appendRow('/tmp/test.csv', {image1: 'a.png', image2: 'b.png', line1: 'line1', line2: 'line2'});
+    const rows = [];
+    for await (const row of csv.readRows('/tmp/test.csv')) {
+      rows.push(row);
+    }
+    expect(rows).to.deep.equal([
+      ['image1', 'image2', 'line1', 'line2'],
+      [
+        'images/0.png',
+        'images/1.png',
+        'Lorem ipsum dolor sit amet, consectetur adipsiscing elit.',
+        'Integer vulputate augue a sem pellentesque pharetra.'
+      ],
+      ['a.png', 'b.png', 'line1', 'line2']
+    ]);
   });
 
   it('should remove a row from a complex CSV file', async () => {

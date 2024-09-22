@@ -13,19 +13,26 @@
  * labels.csv.
  */
 
-import * as child_process from 'child_process';
-import * as escape from 'escape-html';
-import * as fs from 'fs';
-import * as program from 'commander';
+import child_process from 'child_process';
+import escape from 'escape-html';
+import fs from 'fs';
+import {Command} from 'commander';
 
 import {dedent} from './utils';
 
 const temp = require('temp').track();
 
-function list(val) {
+function list(val: string) {
   return val.split(',');
 }
 
+interface CLIArgs {
+  output: string;
+  labels: string[];
+  max_width?: number;
+}
+
+const program = new Command() as (Command & CLIArgs);
 program
   .version('2.1.1')
   .usage('[options] /path/to/images/*.jpg')
@@ -56,7 +63,8 @@ const templateInfo = temp.openSync({suffix: '.html'});
 fs.writeSync(csvInfo.fd, 'path\n' + program.args.join('\n') + '\n');
 fs.closeSync(csvInfo.fd);
 
-const buttonsHtml = program.labels.map((label, idx) => {
+// Add keyboard shortcuts. 1=first button, etc.
+const buttonsHtml = (program.labels as string[]).map((label, idx) => {
   const buttonText = `${label} (${1 + idx})`;
   return `<button type="submit" data-key='${1+idx}' name="label" value="${label}">${escape(buttonText)}</button>`;
 }).join('&nbsp;');
@@ -69,7 +77,6 @@ const undoHtml = dedent`
     </form>`;
 let html = buttonsHtml + undoHtml + '\n<p><img src="${path}" ' + widthHtml + '></p>';
 
-// Add keyboard shortcuts. 1=first button, etc.
 html += dedent`
     <style>
       form { display: inline-block; }
