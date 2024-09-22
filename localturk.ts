@@ -80,7 +80,7 @@ const staticDir = options['staticDir'] || path.dirname(templateFile);
 type Task = {[key: string]: string};
 let flash = '';  // this is used to show warnings in the web UI.
 
-async function renderTemplate({task, numCompleted, numTotal}: TaskStats) {
+async function renderTemplate({task, numCompleted, rowNumber, numTotal}: TaskStats) {
   const template = await fs.readFile(templateFile, {encoding: 'utf8'});
   const fullDict: Record<string, string> = {};
   for (const k in task) {
@@ -92,6 +92,7 @@ async function renderTemplate({task, numCompleted, numTotal}: TaskStats) {
   for (var [k, v] of Object.entries(options.var)) {
     fullDict[k] = utils.htmlEntities(v as string);
   }
+  fullDict['ROW_NUMBER'] = String(rowNumber);
   const userHtml = utils.renderTemplate(template, fullDict);
 
   const thisFlash = flash;
@@ -123,6 +124,7 @@ async function renderTemplate({task, numCompleted, numTotal}: TaskStats) {
         el.click();
       }
     });
+    // This is row number ${rowNumber}; visit /${rowNumber} to come back to it.
     </script>
     </body>
     </html>
@@ -156,6 +158,7 @@ async function checkTaskOutput(task: Task) {
 interface TaskStats {
   task?: Task;
   numCompleted: number;
+  rowNumber: number;
   numTotal: number;
 }
 
@@ -173,6 +176,7 @@ async function getNextTask(): Promise<TaskStats> {
       continue;
     }
 
+    task.ROW_NUMBER = String(numTotal - 1);
     if (sampler) {
       sampler.pushSome(task);
     } else {
@@ -180,11 +184,42 @@ async function getNextTask(): Promise<TaskStats> {
     }
   }
 
+  const task = sampler ? sampler[0] : nextTask;
+  let rowNumber = 0;
+  if (task) {
+    rowNumber = Number(task.ROW_NUMBER);
+    delete task.ROW_NUMBER;
+  }
   return {
-    task: sampler ? sampler[0] : nextTask,
+    task,
     numCompleted: _.size(completedTasks),
+    rowNumber,
     numTotal,
   }
+}
+
+async function getTaskNum(n: number): Promise<TaskStats> {
+  const completedTasks = await readCompletedTasks();  // just getting the count.
+  let i = 0;
+  let numTotal = 0;
+  let taskN;;
+  for await (const task of csv.readRowObjects(tasksFile)) {
+    task.ROW_NUMBER = String(numTotal + 1);
+    numTotal++;
+    if (i === n) {
+      taskN = task;
+    }
+    i++;
+  }
+  if (taskN) {
+    return {
+      task: taskN,
+      numCompleted: _.size(completedTasks),
+      rowNumber: n,
+      numTotal,
+    }
+  }
+  throw new Error('Task not found');
 }
 
 const app = express();
@@ -203,6 +238,12 @@ app.get('/', utils.wrapPromise(async (req, res) => {
     res.send('DONE');
     process.exit(0);
   }
+}));
+
+app.get('/:num(\\d+)', utils.wrapPromise(async (req, res) => {
+  const task = await getTaskNum(parseInt(req.params.num));
+  const html = await renderTemplate(task);
+  res.send(html);
 }));
 
 app.post('/submit', utils.wrapPromise(async (req, res) => {
