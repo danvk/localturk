@@ -71,10 +71,10 @@ if (writeTemplate) {
 }
 
 const [templateFile, tasksFile, outputsFile] = args;
-const port = program.port || 4321;
+const port = options.port || 4321;
 // --static-dir is particularly useful for classify-images, where the template file is in a
 // temporary directory but the image files could be anywhere.
-const staticDir = program['staticDir'] || path.dirname(templateFile);
+const staticDir = options['staticDir'] || path.dirname(templateFile);
 
 type Task = {[key: string]: string};
 let flash = '';  // this is used to show warnings in the web UI.
@@ -88,7 +88,7 @@ async function renderTemplate({task, numCompleted, numTotal}: TaskStats) {
   // Note: these two fields are not available in mechanical turk.
   fullDict['ALL_JSON'] = utils.htmlEntities(JSON.stringify(task, null, 2));
   fullDict['ALL_JSON_RAW'] = JSON.stringify(task);
-  for (var [k, v] of Object.entries(program.var)) {
+  for (var [k, v] of Object.entries(options.var)) {
     fullDict[k] = utils.htmlEntities(v as string);
   }
   const userHtml = utils.renderTemplate(template, fullDict);
