@@ -31,6 +31,7 @@ interface CLIArgs {
   port?: number;
   output: string;
   labels: string[];
+  shortcuts: string[] | null;
   max_width?: number;
   randomOrder?: boolean;
 }
@@ -44,6 +45,7 @@ program
           'Path to output CSV file (default output.csv)', 'output.csv')
   .option('-l, --labels <csv>',
           'Comma-separated list of choices of labels', list, ['Yes', 'No'])
+  .option('--shortcuts <a,b,c>', 'Comma-separated list of keyboard shortcuts for labels. Default is 1, 2, etc.', list, null)
   .option('-w, --max_width <pixels>',
           'Make the images this width when displaying in-browser', parseInt)
   .option('-r, --random-order',
@@ -56,7 +58,13 @@ if (program.args.length == 0) {
   program.help();  // exits
 }
 const options = program.opts<CLIArgs>();
-console.log(options.labels);
+let {shortcuts} = options;
+if (!shortcuts) {
+  shortcuts = options.labels.map((_, idx) => (idx + 1).toString());
+} else if (shortcuts.length !== options.labels.length) {
+  console.error('Number of shortcuts must match number of labels');
+  process.exit(1);
+}
 
 if (fs.existsSync(options.output)) {
   console.warn(dedent`
@@ -88,8 +96,8 @@ fs.closeSync(csvInfo.fd);
 
 // Add keyboard shortcuts. 1=first button, etc.
 const buttonsHtml = options.labels.map((label, idx) => {
-  const buttonText = `${label} (${1 + idx})`;
-  return `<button type="submit" data-key='${1+idx}' name="label" value="${label}">${escape(buttonText)}</button>`;
+  const buttonText = `${label} (${shortcuts[idx]})`;
+  return `<button type="submit" data-key='${shortcuts[idx]}' name="label" value="${label}">${escape(buttonText)}</button>`;
 }).join('&nbsp;');
 
 const widthHtml = options.max_width ? ` width="${options.max_width}"` : '';
@@ -119,6 +127,8 @@ if (options.port) {
 if (options.randomOrder) {
   opts.push('--random-order');
 }
-const args = ['localturk', ...opts, templateInfo.path, csvInfo.path, options.output];
+const bin = ['localturk'];
+// const bin = ['yarn', 'ts-node', 'localturk.ts'];
+const args = [...bin, ...opts, templateInfo.path, csvInfo.path, options.output];
 console.log('Running ', args.join(' '));
 child_process.spawn(args[0], args.slice(1), {stdio: 'inherit'});
