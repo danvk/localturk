@@ -75,8 +75,13 @@ if (images.length === 1 && images[0].endsWith('.txt')) {
   fs.writeSync(csvInfo.fd, 'path\n');
   fs.writeSync(csvInfo.fd, fs.readFileSync(images[0], 'utf8'));
 } else {
-  staticDir = path.dirname(images[0]);
-  images = images.map(p => path.relative(staticDir!, p));
+  const anyOutsideCwd = images.some(p => path.isAbsolute(p) || p.startsWith('..'));
+  if (anyOutsideCwd) {
+    staticDir = path.dirname(images[0]);
+    images = images.map(p => path.relative(staticDir!, p));
+  } else {
+    staticDir = '.';
+  }
   fs.writeSync(csvInfo.fd, 'path\n' + images.join('\n') + '\n');
 }
 fs.closeSync(csvInfo.fd);
