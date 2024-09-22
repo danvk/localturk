@@ -43,6 +43,7 @@ interface CLIArgs {
 
 const program = new Command();
 
+// If you add an option here, consider adding it in classify-images.ts as well.
 program
   .version('2.1.1')
   .usage('[options] template.html tasks.csv outputs.csv')

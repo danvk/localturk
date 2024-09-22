@@ -27,21 +27,27 @@ function list(val: string) {
 }
 
 interface CLIArgs {
+  port?: number;
   output: string;
   labels: string[];
   max_width?: number;
+  randomOrder?: boolean;
 }
 
 const program = new Command();
 program
   .version('2.1.1')
   .usage('[options] /path/to/images/*.jpg | images.txt')
+  .option('-p, --port <n>', 'Run on this port (default 4321)', parseInt)
   .option('-o, --output <file>',
           'Path to output CSV file (default output.csv)', 'output.csv')
   .option('-l, --labels <csv>',
           'Comma-separated list of choices of labels', list, ['Yes', 'No'])
   .option('-w, --max_width <pixels>',
           'Make the images this width when displaying in-browser', parseInt)
+  .option('-r, --random-order',
+    'Serve images in random order, rather than sequentially. This is useful for ' +
+    'generating valid subsamples or for minimizing collisions during group localturking.')
   .parse()
 
 if (program.args.length == 0) {
@@ -94,6 +100,13 @@ html += dedent`
 fs.writeSync(templateInfo.fd, html);
 fs.closeSync(templateInfo.fd);
 
-const args = ['localturk', '--static-dir', '.', templateInfo.path, csvInfo.path, options.output];
+const opts = ['--static-dir', '.'];
+if (options.port) {
+  opts.push('--port', options.port.toString());
+}
+if (options.randomOrder) {
+  opts.push('--random-order');
+}
+const args = ['localturk', ...opts, templateInfo.path, csvInfo.path, options.output];
 console.log('Running ', args.join(' '));
 child_process.spawn(args[0], args.slice(1), {stdio: 'inherit'});
