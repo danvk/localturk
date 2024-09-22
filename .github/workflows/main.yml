@@ -34,7 +34,7 @@ jobs:
         run: yarn
 
       - name: Log Versions
-        run: yarn tsc --version && yarn mocha --version
+        run: yarn tsc --version && yarn jest --version
 
       - name: Prettier
         run: yarn format:check

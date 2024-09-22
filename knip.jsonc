@@ -8,7 +8,6 @@
 	"ignore": [],
 	"ignoreBinaries": [],
 	"ignoreDependencies": [
-		"@types/mocha"
 	],
 	"ignoreExportsUsedInFile": true,
 	"project": [
