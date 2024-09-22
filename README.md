@@ -1,7 +1,6 @@
 [![CircleCI](https://circleci.com/gh/danvk/localturk.svg?style=svg)](https://circleci.com/gh/danvk/localturk)
 
-localturk
-=========
+# localturk
 
 Local Turk implements Amazon's Mechanical Turk API on your own machine.
 
@@ -12,9 +11,7 @@ It's handy if you want to:
 
 You could use it, for instance, to generate test and training data for a Machine Learning algorithm.
 
-
-Quick Start
------------
+## Quick Start
 
 Install:
 
@@ -27,9 +24,7 @@ Run:
 
 Then visit http://localhost:4321/ to start Turking.
 
-
-Templates and Tasks
--------------------
+## Templates and Tasks
 
 Using Local Turk is just like using Amazon's Mechanical Turk. You create:
 
@@ -60,8 +55,7 @@ Now you can visit http://localhost:4321/ to complete each task. When you're done
     http://example.com/image_with_red_ball.png,yes
     http://example.com/image_without_red_ball.png,no
 
-Image Classification
---------------------
+## Image Classification
 
 The use case described above (classifying images) is an extremely common one.
 
@@ -75,8 +69,7 @@ to each image on your local file system. The results will go in `output.csv`.
 
 For more details, run `classify-images --help`.
 
-Tips & Tricks
--------------
+## Tips & Tricks
 
 It can be hard to remember the exact format for template files. localturk can help! Run it with
 the `--write-template` argument to generate a template file for your input that you can edit:
@@ -92,8 +85,14 @@ submit button look like this:
 Now, when you press `d`, it'll automatically click the "Good" button for you. _Note that this
 feature is not available on mechanical turk itself!_
 
-Development
------------
+If you'd like to reference sensitive data that you'd prefer not to commit to your repo
+(an API key, say), you can pass it via a command-line parameter:
+
+    localturk --var API_KEY=123456abcd
+
+Then you can reference this as `${API_KEY}` in your template file.
+
+## Development
 
 To make changes to localturk, clone it and set it up using `yarn`:
 
