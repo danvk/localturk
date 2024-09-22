@@ -32,26 +32,28 @@ interface CLIArgs {
   max_width?: number;
 }
 
-const program = new Command() as (Command & CLIArgs);
+const program = new Command();
 program
   .version('2.1.1')
-  .usage('[options] /path/to/images/*.jpg')
+  .usage('[options] /path/to/images/*.jpg | images.txt')
   .option('-o, --output <file>',
           'Path to output CSV file (default output.csv)', 'output.csv')
   .option('-l, --labels <csv>',
           'Comma-separated list of choices of labels', list, ['Yes', 'No'])
   .option('-w, --max_width <pixels>',
           'Make the images this width when displaying in-browser', parseInt)
-  .parse(process.argv)
+  .parse()
 
 if (program.args.length == 0) {
   console.error('You must specify at least one image file!\n');
   program.help();  // exits
 }
+const options = program.opts<CLIArgs>();
+console.log(options.labels);
 
-if (fs.existsSync(program.output)) {
+if (fs.existsSync(options.output)) {
   console.warn(dedent`
-    Output file ${program.output} already exists.
+    Output file ${options.output} already exists.
     Its contents will be assumed to be previously-generated labels.
     If you want to start from scratch, either delete this file,
     rename it or specify a different output via --output`);
@@ -60,16 +62,22 @@ if (fs.existsSync(program.output)) {
 const csvInfo = temp.openSync({suffix: '.csv'});
 const templateInfo = temp.openSync({suffix: '.html'});
 
-fs.writeSync(csvInfo.fd, 'path\n' + program.args.join('\n') + '\n');
+const images = program.args;
+if (images.length === 1 && images[0].endsWith('.txt')) {
+  fs.writeSync(csvInfo.fd, 'path\n');
+  fs.writeSync(csvInfo.fd, fs.readFileSync(images[0], 'utf8'));
+} else {
+  fs.writeSync(csvInfo.fd, 'path\n' + images.join('\n') + '\n');
+}
 fs.closeSync(csvInfo.fd);
 
 // Add keyboard shortcuts. 1=first button, etc.
-const buttonsHtml = (program.labels as string[]).map((label, idx) => {
+const buttonsHtml = options.labels.map((label, idx) => {
   const buttonText = `${label} (${1 + idx})`;
   return `<button type="submit" data-key='${1+idx}' name="label" value="${label}">${escape(buttonText)}</button>`;
 }).join('&nbsp;');
 
-const widthHtml = program.max_width ? ` width="${program.max_width}"` : '';
+const widthHtml = options.max_width ? ` width="${options.max_width}"` : '';
 const undoHtml = dedent`
     </form>
     <form action="/delete-last" method="POST" style="display: inline-block">
@@ -86,6 +94,6 @@ html += dedent`
 fs.writeSync(templateInfo.fd, html);
 fs.closeSync(templateInfo.fd);
 
-const args = ['localturk', '--static-dir', '.', templateInfo.path, csvInfo.path, program.output];
+const args = ['localturk', '--static-dir', '.', templateInfo.path, csvInfo.path, options.output];
 console.log('Running ', args.join(' '));
 child_process.spawn(args[0], args.slice(1), {stdio: 'inherit'});

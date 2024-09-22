@@ -67,6 +67,9 @@ classification. The example above could be written as:
 This will bring up a web server with a UI for assigning one of those two labels
 to each image on your local file system. The results will go in `output.csv`.
 
+Alternatively, you can also pass in a text file containing the paths to images.
+In this case, the images can be URLs, rather than paths to local files.
+
 For more details, run `classify-images --help`.
 
 ## Tips & Tricks
