@@ -11,7 +11,6 @@
     "classify-images": "dist/classify-images.js"
   },
   "dependencies": {
-    "@commander-js/extra-typings": "^12.1.0",
     "commander": "^12.1.0",
     "csv-parse": "^5.5.6",
     "csv-stringify": "^6.5.1",
@@ -22,10 +21,11 @@
     "lodash": "^4.17.4",
     "open": "8",
     "reservoir": "^0.1.2",
+    "serve-static": "^1.16.2",
     "temp": "^0.8.3"
   },
   "devDependencies": {
-    "@types/chai": "^4.0.7",
+    "@types/chai": "^4.3.19",
     "@types/errorhandler": "^0.0.32",
     "@types/escape-html": "^1.0.4",
     "@types/express": "^4.0.39",
@@ -35,7 +35,8 @@
     "@types/node": "18",
     "@types/reservoir": "^0.1.6",
     "@types/temp": "^0.8.31",
-    "chai": "^4.1.2",
+    "chai": "^5.1.1",
+    "knip": "^5.30.4",
     "mocha": "^4.0.1",
     "prettier": "^3.3.3",
     "ts-node": "^10.9.2",

@@ -1,0 +1,18 @@
+{
+	"$schema": "https://unpkg.com/knip@5/schema.json",
+	"entry": [
+		"localturk.ts!",
+		"classify-images.ts!",
+		"test/**/*.ts"
+	],
+	"ignore": [],
+	"ignoreBinaries": [],
+	"ignoreDependencies": [
+		"@types/mocha"
+	],
+	"ignoreExportsUsedInFile": true,
+	"project": [
+		"*.ts!",
+		"test/**/*.ts"
+	]
+}
