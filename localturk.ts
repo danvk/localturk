@@ -115,6 +115,7 @@ async function renderTemplate({task, numCompleted, numTotal}: TaskStats) {
     // Support keyboard shortcuts via, e.g. <.. data-key="1" />
     window.addEventListener("keydown", function(e) {
       if (document.activeElement !== document.body) return;
+      if (e.altKey || e.metaKey || e.ctrlKey) return;
       var key = e.key;
       const el = document.querySelector('[data-key="' + key + '"]');
       if (el) {

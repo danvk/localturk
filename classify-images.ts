@@ -119,6 +119,8 @@ if (options.port) {
 if (options.randomOrder) {
   opts.push('--random-order');
 }
-const args = ['localturk', ...opts, templateInfo.path, csvInfo.path, options.output];
+const bin = ['localturk'];
+// const bin = ['yarn', 'ts-node', 'localturk.ts'];
+const args = [...bin, ...opts, templateInfo.path, csvInfo.path, options.output];
 console.log('Running ', args.join(' '));
 child_process.spawn(args[0], args.slice(1), {stdio: 'inherit'});
