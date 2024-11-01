@@ -89,6 +89,29 @@ export async function writeCsv(file: string, rows: string[][]) {
   await fs.writeFile(file, output, {encoding: 'utf8'});
 }
 
+const CR = '\n'.charCodeAt(0);
+const LF = '\r'.charCodeAt(0);
+
+export function detectLineEnding(path: string) {
+  const f = fs.openSync(path, 'r');
+  const SIZE = 10_000;
+  const buffer = Buffer.alloc(SIZE);
+  const n = fs.readSync(f, buffer, 0, SIZE, 0);
+  for (let i = 0; i < n; i++) {
+    const [a, b] = [buffer[i], buffer[i+1]];
+    if (a == LF && b == CR) {
+      return '\r\n';
+    } else if (a == CR && b == LF) {
+      return '\n\r';
+    } else if (a == CR) {
+      return '\n';
+    } else if (a == LF) {
+      return '\r';
+    }
+  }
+  return undefined;
+}
+
 /**
  * Append one row to a CSV file.
  *
@@ -130,16 +153,19 @@ export async function appendRow(file: string, row: {[column: string]: string}) {
       rows.push(row.concat(emptyCols));
     }
     rows.push(fullHeaders.map(k => row[k] || ''));
+    // Note: This may have the effect or changing the file's line endings.
     await writeCsv(file, rows);
   } else {
     // write the new row
     const newRow = headers.map(k => row[k] || '');
     await lines.return(); // close the file for reading.
+    // const newlineStyle = detectLineEnding(file) ?? '\n';
     // Add a newline if the file doesn't end with one.
     const f = fs.openSync(file, 'a+');
     const {size} = fs.fstatSync(f);
     const {buffer} = await fs.read(f, Buffer.alloc(1), 0, 1, size - 1);
     const hasTrailingNewline = buffer[0] == '\n'.charCodeAt(0);
+    // const lineStr = (hasTrailingNewline ? '' : '\n') + stringify([newRow], {record_delimiter: newlineStyle});
     const lineStr = (hasTrailingNewline ? '' : '\n') + stringify([newRow]);
     await fs.appendFile(f, lineStr);
     await fs.close(f);
