@@ -143,4 +143,36 @@ describe('csv', () => {
     const data = await read('/tmp/test.csv');
     expect(data).toEqual('id,"First,Last","Last,First"\n' + '1,"Jane,Doe","Doe,Jane"\n');
   });
+
+  it('should read rows from a CSV file with Windows line endings', async () => {
+    const rows = [];
+    for await (const row of csv.readRows('./test/windows.csv')) {
+      rows.push(row);
+    }
+    expect(rows).toEqual([
+      ['A', 'B'],
+      ['1', '2'],
+    ]);
+  });
+
+  it('should append to a CSV file with Windows line endings', async () => {
+    fs.copyFileSync('./test/windows.csv', '/tmp/test.csv');
+    expect(csv.detectLineEnding('/tmp/test.csv')).toEqual('\r\n');
+    await csv.appendRow('/tmp/test.csv', {A: '3', B: '4'});
+    expect(await read('/tmp/test.csv')).toEqual(`A,B\r\n1,2\r\n3,4\r\n`);
+  });
+
+  it('should append to a CSV file with Windows line endings and no trailing newline', async () => {
+    fs.writeFileSync('/tmp/test.csv', `A,B\r\n1,2`);
+    expect(csv.detectLineEnding('/tmp/test.csv')).toEqual('\r\n');
+    expect(await read('/tmp/test.csv')).toEqual(`A,B\r\n1,2`); // no trailing newline
+    await csv.appendRow('/tmp/test.csv', {A: '3', B: '4'});
+    expect(await read('/tmp/test.csv')).toEqual(`A,B\r\n1,2\r\n3,4\r\n`);
+  });
+
+  it('should preserve line endings when adding a new column', async () => {
+    fs.copyFileSync('./test/windows.csv', '/tmp/test.csv');
+    await csv.appendRow('/tmp/test.csv', {A: '3', C: '4'});
+    expect(await read('/tmp/test.csv')).toEqual(`A,B,C\r\n1,2,\r\n3,,4\r\n`);
+  });
 });
