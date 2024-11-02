@@ -1,5 +1,5 @@
 import csvParse from 'csv-parse';
-import {stringify} from 'csv-stringify/sync';
+import {stringify, Options} from 'csv-stringify/sync';
 import * as fs from 'fs-extra';
 
 const csvOptions: csvParse.Options = {
@@ -83,30 +83,30 @@ export async function readHeaders(file: string) {
 }
 
 /** Write a CSV file */
-export async function writeCsv(file: string, rows: string[][]) {
+export async function writeCsv(file: string, rows: string[][], options?: Options) {
   // TODO(danvk): make this less memory-intensive
-  const output = stringify(rows);
+  const output = stringify(rows, options);
   await fs.writeFile(file, output, {encoding: 'utf8'});
 }
 
-const CR = '\n'.charCodeAt(0);
-const LF = '\r'.charCodeAt(0);
+const LF = '\n'.charCodeAt(0);
+const CR = '\r'.charCodeAt(0);
 
+/** Determine the type of line endings a file uses by looking for the first one. */
 export function detectLineEnding(path: string) {
   const f = fs.openSync(path, 'r');
   const SIZE = 10_000;
   const buffer = Buffer.alloc(SIZE);
   const n = fs.readSync(f, buffer, 0, SIZE, 0);
-  for (let i = 0; i < n; i++) {
+  fs.closeSync(f);
+  for (let i = 0; i < n - 1; i++) {
     const [a, b] = [buffer[i], buffer[i+1]];
-    if (a == LF && b == CR) {
-      return '\r\n';
-    } else if (a == CR && b == LF) {
-      return '\n\r';
-    } else if (a == CR) {
-      return '\n';
+    if (a == CR && b == LF) {
+      return '\r\n';  // Windows
     } else if (a == LF) {
-      return '\r';
+      return '\n';  // Unix
+    } else if (a == CR) {
+      return '\r';  // Old Mac
     }
   }
   return undefined;
@@ -126,6 +126,7 @@ export async function appendRow(file: string, row: {[column: string]: string}) {
     return writeCsv(file, rows);
   }
 
+  const lineEnding = detectLineEnding(file);
   const lines = readRows(file);
   const headerRow = await lines.next();
   if (headerRow.done) {
@@ -153,20 +154,18 @@ export async function appendRow(file: string, row: {[column: string]: string}) {
       rows.push(row.concat(emptyCols));
     }
     rows.push(fullHeaders.map(k => row[k] || ''));
-    // Note: This may have the effect or changing the file's line endings.
-    await writeCsv(file, rows);
+    await writeCsv(file, rows, {record_delimiter: lineEnding});
   } else {
     // write the new row
     const newRow = headers.map(k => row[k] || '');
     await lines.return(); // close the file for reading.
-    // const newlineStyle = detectLineEnding(file) ?? '\n';
     // Add a newline if the file doesn't end with one.
     const f = fs.openSync(file, 'a+');
     const {size} = fs.fstatSync(f);
-    const {buffer} = await fs.read(f, Buffer.alloc(1), 0, 1, size - 1);
-    const hasTrailingNewline = buffer[0] == '\n'.charCodeAt(0);
-    // const lineStr = (hasTrailingNewline ? '' : '\n') + stringify([newRow], {record_delimiter: newlineStyle});
-    const lineStr = (hasTrailingNewline ? '' : '\n') + stringify([newRow]);
+    const {buffer} = await fs.read(f, Buffer.alloc(2), 0, 2, size - 2);
+    const tail = buffer.toString('utf8');
+    const hasTrailingNewline = tail.endsWith(lineEnding ?? '\n');
+    const lineStr = (hasTrailingNewline ? '' : lineEnding) + stringify([newRow], {record_delimiter: lineEnding});
     await fs.appendFile(f, lineStr);
     await fs.close(f);
   }
