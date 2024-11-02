@@ -100,13 +100,13 @@ export function detectLineEnding(path: string) {
   const n = fs.readSync(f, buffer, 0, SIZE, 0);
   fs.closeSync(f);
   for (let i = 0; i < n - 1; i++) {
-    const [a, b] = [buffer[i], buffer[i+1]];
+    const [a, b] = [buffer[i], buffer[i + 1]];
     if (a == CR && b == LF) {
-      return '\r\n';  // Windows
+      return '\r\n'; // Windows
     } else if (a == LF) {
-      return '\n';  // Unix
+      return '\n'; // Unix
     } else if (a == CR) {
-      return '\r';  // Old Mac
+      return '\r'; // Old Mac
     }
   }
   return undefined;
@@ -165,7 +165,8 @@ export async function appendRow(file: string, row: {[column: string]: string}) {
     const {buffer} = await fs.read(f, Buffer.alloc(2), 0, 2, size - 2);
     const tail = buffer.toString('utf8');
     const hasTrailingNewline = tail.endsWith(lineEnding ?? '\n');
-    const lineStr = (hasTrailingNewline ? '' : lineEnding) + stringify([newRow], {record_delimiter: lineEnding});
+    const lineStr =
+      (hasTrailingNewline ? '' : lineEnding) + stringify([newRow], {record_delimiter: lineEnding});
     await fs.appendFile(f, lineStr);
     await fs.close(f);
   }
