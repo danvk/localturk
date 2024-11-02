@@ -234,7 +234,7 @@ const app = express();
 app.use(errorhandler());
 app.use(express.json({limit: '50mb'}));
 app.use(express.urlencoded({limit: '50mb', extended: false, parameterLimit: 50_000}));
-app.use(serveStatic(path.resolve(staticDir)));
+app.use(serveStatic(path.resolve(staticDir), {index: false}));
 
 app.get(
   '/',
