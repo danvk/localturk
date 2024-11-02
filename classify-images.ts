@@ -38,7 +38,7 @@ interface CLIArgs {
 
 const program = new Command();
 program
-  .version('2.2.1')
+  .version('2.2.2')
   .usage('[options] /path/to/images/*.jpg | images.txt')
   .option('-p, --port <n>', 'Run on this port (default 4321)', parseInt)
   .option('-o, --output <file>', 'Path to output CSV file (default output.csv)', 'output.csv')
