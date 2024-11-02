@@ -169,4 +169,10 @@ describe('csv', () => {
     await csv.appendRow('/tmp/test.csv', {'A': '3', 'B': '4'});
     expect(await read('/tmp/test.csv')).toEqual(`A,B\r\n1,2\r\n3,4\r\n`);
   });
+
+  it('should preserve line endings when adding a new column', async () => {
+    fs.copyFileSync('./test/windows.csv', '/tmp/test.csv');
+    await csv.appendRow('/tmp/test.csv', {'A': '3', 'C': '4'});
+    expect(await read('/tmp/test.csv')).toEqual(`A,B,C\r\n1,2,\r\n3,,4\r\n`);
+  });
 });

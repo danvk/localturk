@@ -171,6 +171,7 @@ export async function appendRow(file: string, row: {[column: string]: string}) {
   }
 }
 
+// Note: this might change line endings in the file.
 export async function deleteLastRow(file: string) {
   const rows = [];
   for await (const row of readRows(file)) {
